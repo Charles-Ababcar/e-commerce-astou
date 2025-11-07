@@ -1,0 +1,35 @@
+package com.example.demo.service;
+
+import com.example.demo.dto.ApiResponse;
+import com.example.demo.model.Client;
+import com.example.demo.repository.ClientRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ClientService {
+
+    @Autowired
+    private ClientRepository clientRepository;
+
+    public Page<Client> getAllClients(Pageable pageable) {
+        return clientRepository.findAll(pageable);
+    }
+
+    public ApiResponse<Client> getClientById(String id) {
+        Client client = clientRepository.findById(id).orElse(null);
+        return new ApiResponse<>("Successfully retrieved client with id " + id, client);
+    }
+
+    public ApiResponse<Client> createClient(Client client) {
+        Client createdClient = clientRepository.save(client);
+        return new ApiResponse<>("Successfully created client", createdClient);
+    }
+
+    public ApiResponse<Void> deleteClient(String id) {
+        clientRepository.deleteById(id);
+        return new ApiResponse<>("Successfully deleted client with id " + id, null);
+    }
+}
