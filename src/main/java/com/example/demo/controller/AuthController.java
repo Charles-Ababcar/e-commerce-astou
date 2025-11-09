@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.JwtResponse;
-import com.example.demo.model.User;
 import com.example.demo.service.MyUserDetailsService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
