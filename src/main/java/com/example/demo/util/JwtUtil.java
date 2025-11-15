@@ -2,16 +2,24 @@ package com.example.demo.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    private String secret = "secret";
+    private String secret = "a-secure-secret-that-is-long-enough-for-hs256";
+    private Key key;
+
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -27,7 +35,7 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
     private Boolean isTokenExpired(String token) {
@@ -37,13 +45,13 @@ public class JwtUtil {
     public String generateToken(String username) {
         return Jwts.builder().setSubject(username).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 5)) // 5 minutes
-                .signWith(SignatureAlgorithm.HS256, secret).compact();
+                .signWith(key).compact();
     }
 
     public String generateRefreshToken(String username) {
         return Jwts.builder().setSubject(username).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7)) // 7 days
-                .signWith(SignatureAlgorithm.HS256, secret).compact();
+                .signWith(key).compact();
     }
 
     public Boolean validateToken(String token, String username) {
