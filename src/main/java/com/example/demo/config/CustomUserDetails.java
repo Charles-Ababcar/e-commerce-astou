@@ -17,11 +17,12 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Mapper ton enum Role vers une GrantedAuthority
         return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
+
 
     @Override
     public String getPassword() {
