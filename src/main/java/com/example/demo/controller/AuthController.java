@@ -1,7 +1,9 @@
 package com.example.demo.controller;
 
+import com.example.demo.config.CustomUserDetails;
 import com.example.demo.dto.JwtResponse;
 import com.example.demo.dto.UserProfileDto;
+import com.example.demo.model.User;
 import com.example.demo.service.MyUserDetailsService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,24 +44,18 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<UserProfileDto> getProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        User user = userDetails.getUser();
 
-        // Convertir les authorities en liste de rôles
-        List<String> roles = userDetails.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-
-        // Ici, on n’inclut pas le mot de passe
         UserProfileDto profile = new UserProfileDto(
-                userDetails.getUsername(),
-                null, // email si disponible
-                roles
+                user.getUsername(),
+                user.getEmail(), // si tu ajoutes email dans User
+                List.of(user.getRole().name()) // ton rôle enum
         );
 
         return ResponseEntity.ok(profile);
     }
+
 
 
     @PostMapping("/logout")

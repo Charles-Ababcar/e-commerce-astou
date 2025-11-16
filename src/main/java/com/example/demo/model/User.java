@@ -13,6 +13,8 @@ public class User {
     private String id;
 
     private String name;
+
+    private String email;
     private String username;
     private String password;
 
@@ -102,6 +104,14 @@ public class User {
 
     public Set<User> getContacts() {
         return contacts;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public void setContacts(Set<User> contacts) {
