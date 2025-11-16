@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.config.CustomUserDetailsService;
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.model.User;
@@ -28,7 +29,7 @@ public class UserController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    private CustomUserDetailsService customUserDetailsService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@RequestBody User user) {
@@ -45,7 +46,7 @@ public class UserController {
         );
 
         // Charger l'utilisateur
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+        final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
 
         // Générer les tokens
         final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
