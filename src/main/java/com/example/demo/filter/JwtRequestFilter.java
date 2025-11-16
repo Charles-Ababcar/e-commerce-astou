@@ -24,7 +24,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Qualifier("customUserDetailsService")
     private UserDetailsService userDetailsService;
 
-
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -32,25 +31,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        // 1. Laisser passer OPTIONS (preflight)
-        if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
-
         String uri = request.getRequestURI();
+        String[] publicEndpoints = {"/api/auth/login", "/api/auth/refresh", "/api/users/login", "/api/users/register"};
 
-        if (uri.equals("/api/auth/login") ||
-                uri.equals("/api/auth/refresh") ||
-                uri.equals("/api/users/login") ||
-                uri.equals("/api/users/register")) {
-            chain.doFilter(request, response);
-            return;
+        for (String endpoint : publicEndpoints) {
+            if (uri.startsWith(endpoint)) {
+                chain.doFilter(request, response);
+                return;
+            }
         }
 
-        // 3. Logique JWT
         final String authorizationHeader = request.getHeader("Authorization");
-
         String username = null;
         String jwt = null;
 
@@ -59,10 +50,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                // Token invalide → laisser passer sans authentification
-                chain.doFilter(request, response);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT Token");
                 return;
             }
+        } else {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Authorization Header");
+            return;
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -70,17 +63,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
-                        );
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-
                 System.out.println("Authentication set for: " + username);
+            } else {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT Token validation failed");
+                return;
             }
         }
-
 
         chain.doFilter(request, response);
     }
 }
+
