@@ -45,17 +45,14 @@ public class AuthController {
         String username = authentication.getName();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        List<String> roles = userDetails.getAuthorities()
-                .stream()
-                .map(auth -> auth.getAuthority())
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(a -> a.getAuthority())
                 .collect(Collectors.toList());
 
-        // email si tu as dans ton UserDetails personnalisé
-        String email = "";
-
-        UserProfileDto profile = new UserProfileDto(userDetails.getUsername(), email, roles);
-        return ResponseEntity.ok(profile);
+        return ResponseEntity.ok(new UserProfileDto(username, roles));
     }
+
+
 
 
     @PostMapping("/logout")
