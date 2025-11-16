@@ -25,14 +25,17 @@ public class UserService {
     public User createUser(User user, User.Role role) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
-        User currentUser = userRepository.findByUsername(currentUsername);
+
+        // ⚡ Correction : utiliser orElseThrow() sur l'Optional
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new SecurityException("Utilisateur courant introuvable"));
 
         if (currentUser.getRole() == User.Role.SUPER_ADMIN && (role == User.Role.ADMIN || role == User.Role.USER)) {
             return saveUser(user, role);
         } else if (currentUser.getRole() == User.Role.ADMIN && role == User.Role.USER) {
             return saveUser(user, role);
         } else {
-            throw new SecurityException("Vous n'êtes pas autorisé à créer ce type d'utilisateur..");
+            throw new SecurityException("Vous n'êtes pas autorisé à créer ce type d'utilisateur.");
         }
     }
 
@@ -53,6 +56,8 @@ public class UserService {
     }
 
     public User findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        // ⚡ Correction : utiliser orElseThrow() pour récupérer le User
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
     }
 }
