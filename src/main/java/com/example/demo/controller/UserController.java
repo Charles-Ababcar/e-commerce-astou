@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ApiResponse;
+import com.example.demo.dto.AuthResponse;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
@@ -12,9 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -39,27 +37,25 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-
-
-
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody User user) {
-
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody User user) {
+        // Authentification
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
         );
 
+        // Charger l'utilisateur
         final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+
+        // Générer les tokens
         final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
         final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
 
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("access_token", accessToken);
-        tokens.put("refresh_token", refreshToken);
+        AuthResponse authResponse = new AuthResponse(accessToken, refreshToken);
 
-        ApiResponse<Map<String, String>> response = new ApiResponse<>("Login successful", tokens);
-
-        return ResponseEntity.ok(response);
+        // Envoyer la réponse
+        ApiResponse<AuthResponse> response = new ApiResponse<>("Login successful", authResponse);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }
