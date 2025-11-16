@@ -59,16 +59,26 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // ✅ Authentification dans le contexte Spring
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
             if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                System.out.println("Authentication set for: " + username);
+                // Log côté serveur
+                System.out.println("Authentication set for user: " + username);
+
+                // Message dans la réponse (pour debug uniquement, pas en prod)
+                response.setHeader("X-Debug-Message", "Authentication set for user: " + username);
+            } else {
+                System.out.println("JWT token invalid for user: " + username);
+                response.setHeader("X-Debug-Message", "JWT token invalid for user: " + username);
             }
+        } else {
+            System.out.println("No username found in JWT or authentication already set.");
+            response.setHeader("X-Debug-Message", "No username found in JWT or authentication already set.");
         }
+
 
         chain.doFilter(request, response);
     }
