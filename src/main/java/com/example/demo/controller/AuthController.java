@@ -9,7 +9,6 @@ import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +44,7 @@ public class AuthController {
     public ResponseEntity<UserProfileDto> getProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = userDetails.getUser();
+        User user = userDetails.user();
 
         UserProfileDto profile = new UserProfileDto(
                 user.getUsername(),

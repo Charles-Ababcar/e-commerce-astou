@@ -59,7 +59,7 @@ public class UserController {
     public ResponseEntity<UserProfileDto> profile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User user = userDetails.getUser();
+        User user = userDetails.user();
 
         UserProfileDto profile = new UserProfileDto(
                 user.getUsername(),
