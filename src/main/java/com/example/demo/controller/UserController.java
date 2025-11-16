@@ -1,19 +1,24 @@
 package com.example.demo.controller;
 
+import com.example.demo.config.CustomUserDetails;
+import com.example.demo.config.CustomUserDetailsService;
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.AuthResponse;
+import com.example.demo.dto.UserProfileDto;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,36 +34,44 @@ public class UserController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    @Qualifier("customUserDetailsService")
-    private UserDetailsService userDetailsService;
-
+    private CustomUserDetailsService customUserDetailsService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@RequestBody User user) {
         User registeredUser = userService.register(user);
-        ApiResponse<User> response = new ApiResponse<>("User registered successfully", registeredUser);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(new ApiResponse<>("User registered successfully", registeredUser), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody User user) {
-        // Authentification
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
         );
 
-        // Charger l'utilisateur
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-
-        // Générer les tokens
+        final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
         final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
         final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
 
-        AuthResponse authResponse = new AuthResponse(accessToken, refreshToken);
-
-        // Envoyer la réponse
-        ApiResponse<AuthResponse> response = new ApiResponse<>("Login successful", authResponse);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse<>("Login successful", new AuthResponse(accessToken, refreshToken)), HttpStatus.OK);
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileDto> profile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        User user = userDetails.getUser();
+
+        UserProfileDto profile = new UserProfileDto(
+                user.getUsername(),
+                user.getEmail(),
+                List.of(user.getRole().name())
+        );
+        return ResponseEntity.ok(profile);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+        // côté client supprime token
+        return ResponseEntity.ok("Logged out successfully");
+    }
 }
