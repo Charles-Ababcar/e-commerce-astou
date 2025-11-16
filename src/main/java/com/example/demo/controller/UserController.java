@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-import com.example.demo.config.CustomUserDetailsService;
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.model.User;
@@ -14,6 +13,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,7 +31,7 @@ public class UserController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private UserDetailsService userDetailsService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@RequestBody User user) {
@@ -39,24 +41,23 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody User user) {
-        // Authentification
+    public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody User user) {
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
         );
 
-        // Charger l'utilisateur
-        final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
-
-        // Générer les tokens
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
         final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
 
-        AuthResponse authResponse = new AuthResponse(accessToken, refreshToken);
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("access_token", accessToken);
+        tokens.put("refresh_token", refreshToken);
 
-        // Envoyer la réponse
-        ApiResponse<AuthResponse> response = new ApiResponse<>("Login successful", authResponse);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        ApiResponse<Map<String, String>> response = new ApiResponse<>("Login successful", tokens);
+
+        return ResponseEntity.ok(response);
     }
 
 
