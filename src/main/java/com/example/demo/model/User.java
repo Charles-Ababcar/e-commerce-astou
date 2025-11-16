@@ -12,6 +12,7 @@ public class User {
     @Id
     private String id;
 
+    private String name;
     private String username;
     private String password;
 
@@ -28,6 +29,15 @@ public class User {
     )
     private Set<Store> stores;
 
+    @ManyToMany
+    @JoinTable(
+        name = "user_contacts",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "contact_id")
+    )
+    private Set<User> contacts;
+
+
     public enum Role {
         SUPER_ADMIN,
         ADMIN,
@@ -40,6 +50,14 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getUsername() {
@@ -80,5 +98,13 @@ public class User {
 
     public void setStores(Set<Store> stores) {
         this.stores = stores;
+    }
+
+    public Set<User> getContacts() {
+        return contacts;
+    }
+
+    public void setContacts(Set<User> contacts) {
+        this.contacts = contacts;
     }
 }
