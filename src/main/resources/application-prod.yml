@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres_prod_db:5432/minane_prod
+    username: prod_user
+    password: ProdPassword2024!
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

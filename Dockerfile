@@ -1,17 +1,17 @@
-# Utiliser une image de base OpenJDK 17 slim pour garder l'image légère
-FROM openjdk:17-slim
-
-# Définir un argument pour le chemin du fichier JAR
-ARG JAR_FILE=target/*.jar
-
-# Créer un répertoire de travail
+# Étape 1 : build de l'application
+FROM maven:3.9.2-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copier le fichier JAR de l'application dans le conteneur
-COPY ${JAR_FILE} app.jar
+# Étape 2 : image runtime
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 
-# Exposer le port sur lequel l'application s'exécute
+# Exposer le port de Spring Boot
 EXPOSE 8080
 
-# Définir le point d'entrée pour exécuter l'application
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+# Lancer l'application
+ENTRYPOINT ["java", "-jar", "app.jar"]
