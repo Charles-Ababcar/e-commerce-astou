@@ -57,7 +57,7 @@ public class DashboardService {
     public ApiResponse<Map<String, Object>> getSalesTrends(String type, String storeId, LocalDate startDate, LocalDate endDate) {
         // La logique pour les tendances des ventes reste la même
         Map<String, Object> result = new HashMap<>();
-        result.put("salesTrends", "Sales trends data based on the provided parameters.");
+        result.put("salesTrends", "Données sur les tendances des ventes basées sur les paramètres fournis.");
         return new ApiResponse<>("Tendances des ventes", result);
     }
 

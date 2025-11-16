@@ -18,7 +18,7 @@ public class ImageUploadService {
         try {
             Files.createDirectories(root);
         } catch (IOException e) {
-            throw new RuntimeException("Could not initialize folder for upload!");
+            throw new RuntimeException("Impossible d'initialiser le dossier pour le téléchargement!");
         }
     }
 

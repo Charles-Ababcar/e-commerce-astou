@@ -32,7 +32,7 @@ public class UserService {
         } else if (currentUser.getRole() == User.Role.ADMIN && role == User.Role.USER) {
             return saveUser(user, role);
         } else {
-            throw new SecurityException("You do not have permission to create this type of user.");
+            throw new SecurityException("Vous n'êtes pas autorisé à créer ce type d'utilisateur..");
         }
     }
 

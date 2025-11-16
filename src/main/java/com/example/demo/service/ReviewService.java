@@ -32,12 +32,12 @@ public class ReviewService {
     public ApiResponse<Review> createReview(CreateReviewRequest createReviewRequest) {
         Product product = productRepository.findById(createReviewRequest.getProductId()).orElse(null);
         if (product == null) {
-            return new ApiResponse<>("Product not found", null);
+            return new ApiResponse<>("Produit introuvable", null);
         }
 
         User user = userRepository.findById(createReviewRequest.getUserId()).orElse(null);
         if (user == null) {
-            return new ApiResponse<>("User not found", null);
+            return new ApiResponse<>("Utilisateur introuvable", null);
         }
 
         Review review = new Review();
@@ -47,6 +47,6 @@ public class ReviewService {
         review.setComment(createReviewRequest.getComment());
 
         Review savedReview = reviewRepository.save(review);
-        return new ApiResponse<>("Review created successfully", savedReview);
+        return new ApiResponse<>("Avis créé avec succès", savedReview);
     }
 }

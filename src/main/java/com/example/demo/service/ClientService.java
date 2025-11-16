@@ -25,7 +25,7 @@ public class ClientService {
 
     public ApiResponse<Client> createClient(Client client) {
         Client createdClient = clientRepository.save(client);
-        return new ApiResponse<>("Successfully created client", createdClient);
+        return new ApiResponse<>("Client créé avec succès", createdClient);
     }
 
     public ApiResponse<Void> deleteClient(String id) {
