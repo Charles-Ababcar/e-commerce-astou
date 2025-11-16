@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.JwtResponse;
+import com.example.demo.dto.UserProfileDto;
 import com.example.demo.service.MyUserDetailsService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
