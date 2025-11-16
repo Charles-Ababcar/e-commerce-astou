@@ -45,7 +45,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-
         // 3. Logique JWT
         final String authorizationHeader = request.getHeader("Authorization");
 

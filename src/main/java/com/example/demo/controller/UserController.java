@@ -13,6 +13,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -36,14 +39,27 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+
+
+
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody User user) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody User user) {
+
         authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
         );
+
         final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        final String token = jwtUtil.generateToken(userDetails.getUsername());
-        ApiResponse<String> response = new ApiResponse<>("Login successful", token);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
+        final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
+
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("access_token", accessToken);
+        tokens.put("refresh_token", refreshToken);
+
+        ApiResponse<Map<String, String>> response = new ApiResponse<>("Login successful", tokens);
+
+        return ResponseEntity.ok(response);
     }
+
 }
