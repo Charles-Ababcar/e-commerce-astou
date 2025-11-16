@@ -37,12 +37,23 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserDetails> getProfile() {
+    public ResponseEntity<UserProfileDto> getProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        return ResponseEntity.ok(userDetails);
+
+        List<String> roles = userDetails.getAuthorities()
+                .stream()
+                .map(auth -> auth.getAuthority())
+                .collect(Collectors.toList());
+
+        // email si tu as dans ton UserDetails personnalisé
+        String email = "";
+
+        UserProfileDto profile = new UserProfileDto(userDetails.getUsername(), email, roles);
+        return ResponseEntity.ok(profile);
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
