@@ -1,20 +1,16 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.JwtResponse;
-import com.example.demo.dto.UserProfileDto;
 import com.example.demo.service.MyUserDetailsService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,20 +37,12 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileDto> getProfile() {
+    public ResponseEntity<UserDetails> getProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new UserProfileDto(username, roles));
+        return ResponseEntity.ok(userDetails);
     }
-
-
-
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
