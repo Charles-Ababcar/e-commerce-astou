@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres_test_db:5432/minane_test
+    url: jdbc:postgresql://postgres_test_db:5432/minane_test?connectTimeout=5000&socketTimeout=5000
     username: test_user
     password: TestPassword2024!
   jpa:
