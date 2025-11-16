@@ -7,6 +7,7 @@ import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +48,7 @@ public class AuthController {
         // Convertir les authorities en liste de rôles
         List<String> roles = userDetails.getAuthorities()
                 .stream()
-                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .toList();
 
         // Ici, on n’inclut pas le mot de passe
