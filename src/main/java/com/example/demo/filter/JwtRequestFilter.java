@@ -30,21 +30,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         // 1. Laisser passer OPTIONS (preflight)
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
             response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
 
-        // 2. Laisser passer les endpoints d'auth sans token
         String uri = request.getRequestURI();
-        if (uri.startsWith("/api/auth/login")
-                || uri.startsWith("/api/auth/refresh")
-                || uri.startsWith("/api/users/login")
-                || uri.startsWith("/api/users/register")) {
 
+        if (uri.equals("/api/auth/login") ||
+                uri.equals("/api/auth/refresh") ||
+                uri.equals("/api/users/login") ||
+                uri.equals("/api/users/register")) {
             chain.doFilter(request, response);
             return;
         }
+
 
         // 3. Logique JWT
         final String authorizationHeader = request.getHeader("Authorization");
