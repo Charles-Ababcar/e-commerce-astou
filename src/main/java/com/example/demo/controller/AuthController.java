@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.JwtResponse;
+import com.example.demo.dto.UserProfileDto;
 import com.example.demo.service.MyUserDetailsService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,12 +39,27 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserDetails> getProfile() {
+    public ResponseEntity<UserProfileDto> getProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        return ResponseEntity.ok(userDetails);
+
+        // Convertir les authorities en liste de rôles
+        List<String> roles = userDetails.getAuthorities()
+                .stream()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .toList();
+
+        // Ici, on n’inclut pas le mot de passe
+        UserProfileDto profile = new UserProfileDto(
+                userDetails.getUsername(),
+                null, // email si disponible
+                roles
+        );
+
+        return ResponseEntity.ok(profile);
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
