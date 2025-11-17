@@ -44,35 +44,26 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody User user) {
-        try {
-            System.out.println("🔑 Tentative de connexion pour l'utilisateur: " + user.getUsername());
+        System.out.println("🔑 Tentative de connexion pour l'utilisateur: " + user.getUsername());
 
-            // Tentative d'authentification
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
-            );
-            System.out.println("✅ Authentification réussie pour: " + user.getUsername());
+        // Authentification
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+        );
 
-            // Charger l'utilisateur depuis le service
-            //final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
-            //System.out.println("ℹ️ UserDetails récupéré: " + userDetails.getUsername() +
-                   // ", rôles: " + userDetails.getAuthorities());
+        // Générer les tokens directement avec le username
+        final String accessToken = jwtUtil.generateToken(user.getUsername());
+        final String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
-            // Générer les tokens
-            final String accessToken = jwtUtil.generateToken(user.getUsername());
-            final String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-            System.out.println("🔐 Tokens générés pour: " + user.getUsername());
+        System.out.println("✅ Authentification réussie pour: " + user.getUsername());
+        System.out.println("🔑 Access Token: " + accessToken);
 
-            AuthResponse authResponse = new AuthResponse(accessToken, refreshToken);
-            return new ResponseEntity<>(new ApiResponse<>("Login successful", authResponse), HttpStatus.OK);
-
-        }  catch (Exception ex) {
-            // Log complet de l'erreur
-            System.out.println("❌ Échec de connexion pour: " + user.getUsername());
-            ex.printStackTrace();
-            return new ResponseEntity<>(new ApiResponse<>("Login failed: " + ex.getMessage(), null), HttpStatus.FORBIDDEN);
-        }
+        return new ResponseEntity<>(
+                new ApiResponse<>("Login successful", new AuthResponse(accessToken, refreshToken)),
+                HttpStatus.OK
+        );
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
