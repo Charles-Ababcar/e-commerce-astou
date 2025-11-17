@@ -4,21 +4,10 @@ public class ApiResponse<T> {
 
     private String message;
     private T data;
-    private Integer status; // <-- optionnel
 
-    public ApiResponse(String message) {
-        this.message = message;
-    }
-
-    public ApiResponse(String message, T data) {
+    public ApiResponse(String message, T data, int value) {
         this.message = message;
         this.data = data;
-    }
-
-    public ApiResponse(String message, T data, Integer status) {
-        this.message = message;
-        this.data = data;
-        this.status = status;
     }
 
     public String getMessage() {
