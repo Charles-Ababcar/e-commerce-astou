@@ -44,30 +44,33 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody User user) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
-        );
+        try {
+            System.out.println("🔑 Tentative de connexion pour l'utilisateur: " + user.getUsername());
 
-        final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
-        final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
-        final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
+            // Tentative d'authentification
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+            );
+            System.out.println("✅ Authentification réussie pour: " + user.getUsername());
 
-        return new ResponseEntity<>(new ApiResponse<>("Login successful", new AuthResponse(accessToken, refreshToken)), HttpStatus.OK);
-    }
+            // Charger l'utilisateur depuis le service
+            final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+            System.out.println("ℹ️ UserDetails récupéré: " + userDetails.getUsername() +
+                    ", rôles: " + userDetails.getAuthorities());
 
-    @GetMapping("/profile")
-    public ResponseEntity<UserProfileDto> profile() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User user = userDetails.user();
+            // Générer les tokens
+            final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
+            final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
+            System.out.println("🔐 Tokens générés pour: " + user.getUsername());
 
-        UserProfileDto profile = new UserProfileDto(
-                user.getUsername(),
-                user.getEmail(),
-                List.of(user.getRole().name())
-        );
-        return ResponseEntity.ok(profile);
-    }
+            AuthResponse authResponse = new AuthResponse(accessToken, refreshToken);
+            return new ResponseEntity<>(new ApiResponse<>("Login successful", authResponse), HttpStatus.OK);
+
+        } catch (Exception ex) {
+            // Log complet de l'erreur
+            System.out.println("❌ Échec de connexion pour: " + u
+
+
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
