@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -31,12 +32,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         String uri = request.getRequestURI();
 
-        // ✅ Ignorer les endpoints publics
-        if (uri.startsWith("/api/users/login") ||
-                uri.startsWith("/api/users/register") ||
-                uri.startsWith("/api/auth/refresh") ||
-                uri.startsWith("/v3/api-docs") ||
-                uri.startsWith("/swagger-ui")) {
+        // 🔥 Endpoints publics à ignorer
+        List<String> excluded = List.of(
+                "/api/users/login",
+                "/api/users/register",
+                "/api/auth/refresh",
+                "/v3/api-docs",
+                "/swagger-ui"
+        );
+
+        if (excluded.stream().anyMatch(uri::startsWith)) {
             chain.doFilter(request, response);
             return;
         }
