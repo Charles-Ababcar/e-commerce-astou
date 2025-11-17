@@ -54,13 +54,13 @@ public class UserController {
             System.out.println("✅ Authentification réussie pour: " + user.getUsername());
 
             // Charger l'utilisateur depuis le service
-            final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
-            System.out.println("ℹ️ UserDetails récupéré: " + userDetails.getUsername() +
-                    ", rôles: " + userDetails.getAuthorities());
+            //final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+            //System.out.println("ℹ️ UserDetails récupéré: " + userDetails.getUsername() +
+                   // ", rôles: " + userDetails.getAuthorities());
 
             // Générer les tokens
-            final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
-            final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
+            final String accessToken = jwtUtil.generateToken(user.getUsername());
+            final String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
             System.out.println("🔐 Tokens générés pour: " + user.getUsername());
 
             AuthResponse authResponse = new AuthResponse(accessToken, refreshToken);
