@@ -26,7 +26,7 @@ public class ProductService {
 
     public ApiResponse<Product> getProductById(String id) {
         Product product = productRepository.findById(id).orElse(null);
-        return new ApiResponse<>("Le produit avec l'identifiant " + id + " a été récupéré avec succès", product);
+        return new ApiResponse<>("Le produit avec l'identifiant " + id + " a été récupéré avec succès", product, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Product> createProduct(Product product, MultipartFile image) {
@@ -35,7 +35,7 @@ public class ProductService {
             product.setImageUrl(imageUrl);
         }
         Product createdProduct = productRepository.save(product);
-        return new ApiResponse<>("Produit créé avec succès", createdProduct);
+        return new ApiResponse<>("Produit créé avec succès", createdProduct, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Product> updateProduct(String id, Product productDetails, MultipartFile image) {
@@ -58,13 +58,13 @@ public class ProductService {
                         product.setImageUrl(imageUrl);
                     }
                     Product updatedProduct = productRepository.save(product);
-                    return new ApiResponse<>("Produit mis à jour avec succès", updatedProduct);
+                    return new ApiResponse<>("Produit mis à jour avec succès", updatedProduct, HttpStatus.UNAUTHORIZED.value());
                 })
-                .orElse(new ApiResponse<>("Produit non trouvé avec l'identifiant " + id, null));
+                .orElse(new ApiResponse<>("Produit non trouvé avec l'identifiant " + id, null, HttpStatus.UNAUTHORIZED.value()));
     }
 
     public ApiResponse<Void> deleteProduct(String id) {
         productRepository.deleteById(id);
-        return new ApiResponse<>("Produit avec l'identifiant " + id + " supprimé avec succès", null);
+        return new ApiResponse<>("Produit avec l'identifiant " + id + " supprimé avec succès", null, HttpStatus.UNAUTHORIZED.value());
     }
 }

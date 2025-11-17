@@ -45,7 +45,7 @@ public class DashboardControllerTest {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalRevenue", 1000.0);
         given(dashboardService.getGeneralStatistics(any(), any(), any()))
-                .willReturn(new ApiResponse<>("General stats", stats));
+                .willReturn(new ApiResponse<>("General stats", stats, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/dashboard/general").with(csrf()))
                 .andExpect(status().isOk())
@@ -57,7 +57,7 @@ public class DashboardControllerTest {
         Map<String, Object> trends = new HashMap<>();
         trends.put("2023-01-01", 100.0);
         given(dashboardService.getSalesTrends(anyString(), any(), any(), any()))
-                .willReturn(new ApiResponse<>("Sales trends", trends));
+                .willReturn(new ApiResponse<>("Sales trends", trends, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/dashboard/sales/trends").param("type", "daily").with(csrf()))
                 .andExpect(status().isOk())
@@ -108,7 +108,7 @@ public class DashboardControllerTest {
         Map<String, Object> stats = new HashMap<>();
         stats.put("unitsSold", 50);
         given(dashboardService.getProductStatistics(anyString()))
-                .willReturn(new ApiResponse<>("Product stats", stats));
+                .willReturn(new ApiResponse<>("Product stats", stats, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/dashboard/products/prod1/statistics").with(csrf()))
                 .andExpect(status().isOk())
@@ -120,7 +120,7 @@ public class DashboardControllerTest {
         Map<String, Object> rate = new HashMap<>();
         rate.put("rate", 0.25);
         given(dashboardService.getAbandonedCartsRate(any(), any(), any()))
-                .willReturn(new ApiResponse<>("Abandoned cart rate", rate));
+                .willReturn(new ApiResponse<>("Abandoned cart rate", rate, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/dashboard/carts/abandoned-rate").with(csrf()))
                 .andExpect(status().isOk())
@@ -132,7 +132,7 @@ public class DashboardControllerTest {
         Map<String, Object> rate = new HashMap<>();
         rate.put("rate", 0.05);
         given(dashboardService.getConversionRate(any(), any(), any()))
-                .willReturn(new ApiResponse<>("Conversion rate", rate));
+                .willReturn(new ApiResponse<>("Conversion rate", rate, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/dashboard/conversion-rate").with(csrf()))
                 .andExpect(status().isOk())
@@ -144,7 +144,7 @@ public class DashboardControllerTest {
         Map<String, Object> revenue = new HashMap<>();
         revenue.put("Electronics", 500.0);
         given(dashboardService.getRevenueByCategory(any(), any(), any()))
-                .willReturn(new ApiResponse<>("Revenue by category", revenue));
+                .willReturn(new ApiResponse<>("Revenue by category", revenue, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/dashboard/revenue-by-category").with(csrf()))
                 .andExpect(status().isOk())
@@ -156,7 +156,7 @@ public class DashboardControllerTest {
         Map<String, Object> comparison = new HashMap<>();
         comparison.put("revenueChange", 0.1);
         given(dashboardService.getPerformanceComparison(any(LocalDate.class), any(LocalDate.class), any(LocalDate.class), any(LocalDate.class), any()))
-                .willReturn(new ApiResponse<>("Performance comparison", comparison));
+                .willReturn(new ApiResponse<>("Performance comparison", comparison, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/dashboard/performance-comparison").with(csrf())
                         .param("currentStart", "2023-01-01")

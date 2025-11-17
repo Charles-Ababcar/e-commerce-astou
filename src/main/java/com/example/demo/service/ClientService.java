@@ -20,16 +20,16 @@ public class ClientService {
 
     public ApiResponse<Client> getClientById(String id) {
         Client client = clientRepository.findById(id).orElse(null);
-        return new ApiResponse<>("Successfully retrieved client with id " + id, client);
+        return new ApiResponse<>("Successfully retrieved client with id " + id, client, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Client> createClient(Client client) {
         Client createdClient = clientRepository.save(client);
-        return new ApiResponse<>("Client créé avec succès", createdClient);
+        return new ApiResponse<>("Client créé avec succès", createdClient, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Void> deleteClient(String id) {
         clientRepository.deleteById(id);
-        return new ApiResponse<>("Successfully deleted client with id " + id, null);
+        return new ApiResponse<>("Successfully deleted client with id " + id, null, HttpStatus.UNAUTHORIZED.value());
     }
 }

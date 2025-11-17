@@ -50,7 +50,7 @@ public class CartControllerTest {
         Cart cart = new Cart();
         cart.setId(cartId);
 
-        given(cartService.getCartById(anyString())).willReturn(new ApiResponse<>("Cart found", cart));
+        given(cartService.getCartById(anyString())).willReturn(new ApiResponse<>("Cart found", cart, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/carts/" + cartId).with(csrf()))
                 .andExpect(status().isOk())
@@ -62,7 +62,7 @@ public class CartControllerTest {
         Cart cart = new Cart();
         cart.setId(UUID.randomUUID().toString());
 
-        given(cartService.createCart(any(Cart.class))).willReturn(new ApiResponse<>("Cart created", cart));
+        given(cartService.createCart(any(Cart.class))).willReturn(new ApiResponse<>("Cart created", cart, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(post("/api/carts").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -90,7 +90,7 @@ public class CartControllerTest {
 
 
         given(cartService.addItemToCart(anyString(), any(AddItemRequest.class)))
-                .willReturn(new ApiResponse<>("Item added", cart));
+                .willReturn(new ApiResponse<>("Item added", cart, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(post("/api/carts/" + cartId + "/items").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +108,7 @@ public class CartControllerTest {
         Cart cart = new Cart();
 
         given(cartService.updateCartItem(anyString(), anyString(), any(UpdateItemRequest.class)))
-                .willReturn(new ApiResponse<>("Item updated", cart));
+                .willReturn(new ApiResponse<>("Item updated", cart, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(put("/api/carts/" + cartId + "/items/" + itemId).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -123,7 +123,7 @@ public class CartControllerTest {
         Cart cart = new Cart();
 
         given(cartService.removeCartItem(anyString(), anyString()))
-                .willReturn(new ApiResponse<>("Item removed", cart));
+                .willReturn(new ApiResponse<>("Item removed", cart, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(delete("/api/carts/" + cartId + "/items/" + itemId).with(csrf()))
                 .andExpect(status().isOk());

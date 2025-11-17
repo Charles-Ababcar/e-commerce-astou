@@ -29,21 +29,21 @@ public class CartService {
     public ApiResponse<Cart> getCartById(String id) {
         Cart cart = cartRepository.findById(id).orElse(null);
         if (cart == null) {
-            return new ApiResponse<>("Panier non trouvé avec l'identifiant " + id, null);
+            return new ApiResponse<>("Panier non trouvé avec l'identifiant " + id, null, HttpStatus.UNAUTHORIZED.value());
         }
-        return new ApiResponse<>("Le panier avec l'identifiant " + id + " a été récupéré avec succès", cart);
+        return new ApiResponse<>("Le panier avec l'identifiant " + id + " a été récupéré avec succès", cart, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Cart> createCart(Cart cart) {
         Cart createdCart = cartRepository.save(cart);
-        return new ApiResponse<>("Panier créé avec succès", createdCart);
+        return new ApiResponse<>("Panier créé avec succès", createdCart, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Cart> addItemToCart(String cartId, AddItemRequest addItemRequest) {
         return cartRepository.findById(cartId).map(cart -> {
             Product product = productRepository.findById(addItemRequest.getProductId()).orElse(null);
             if (product == null) {
-                return new ApiResponse<Cart>("Produit non trouvé avec l'identifiant " + addItemRequest.getProductId(), null);
+                return new ApiResponse<Cart>("Produit non trouvé avec l'identifiant " + addItemRequest.getProductId(), null, HttpStatus.UNAUTHORIZED.value());
             }
 
             Optional<CartItem> existingCartItem = cartItemRepository.findByCartIdAndProductId(cartId, addItemRequest.getProductId());
@@ -61,30 +61,30 @@ public class CartService {
             }
 
             Cart updatedCart = cartRepository.findById(cartId).get();
-            return new ApiResponse<>("Article ajouté au panier", updatedCart);
-        }).orElse(new ApiResponse<>("Panier non trouvé avec l'identifiant " + cartId, null));
+            return new ApiResponse<>("Article ajouté au panier", updatedCart, HttpStatus.UNAUTHORIZED.value());
+        }).orElse(new ApiResponse<>("Panier non trouvé avec l'identifiant " + cartId, null, HttpStatus.UNAUTHORIZED.value()));
     }
 
     public ApiResponse<Cart> updateCartItem(String cartId, String itemId, UpdateItemRequest updateItemRequest) {
         return cartItemRepository.findById(itemId).map(cartItem -> {
             if (!cartItem.getCart().getId().equals(cartId)) {
-                return new ApiResponse<Cart>("L'article du panier avec l'identifiant " + itemId + " n'appartient pas au panier avec l'identifiant " + cartId, null);
+                return new ApiResponse<Cart>("L'article du panier avec l'identifiant " + itemId + " n'appartient pas au panier avec l'identifiant " + cartId, null, HttpStatus.UNAUTHORIZED.value());
             }
             cartItem.setQuantity(updateItemRequest.getQuantity());
             cartItemRepository.save(cartItem);
             Cart updatedCart = cartRepository.findById(cartId).get();
-            return new ApiResponse<>("Article du panier mis à jour", updatedCart);
-        }).orElse(new ApiResponse<>("Article du panier non trouvé avec l'identifiant " + itemId, null));
+            return new ApiResponse<>("Article du panier mis à jour", updatedCart, HttpStatus.UNAUTHORIZED.value());
+        }).orElse(new ApiResponse<>("Article du panier non trouvé avec l'identifiant " + itemId, null, HttpStatus.UNAUTHORIZED.value()));
     }
 
     public ApiResponse<Cart> removeCartItem(String cartId, String itemId) {
         return cartItemRepository.findById(itemId).map(cartItem -> {
             if (!cartItem.getCart().getId().equals(cartId)) {
-                return new ApiResponse<Cart>("L'article du panier avec l'identifiant " + itemId + " n'appartient pas au panier avec l'identifiant " + cartId, null);
+                return new ApiResponse<Cart>("L'article du panier avec l'identifiant " + itemId + " n'appartient pas au panier avec l'identifiant " + cartId, null, HttpStatus.UNAUTHORIZED.value());
             }
             cartItemRepository.delete(cartItem);
             Cart updatedCart = cartRepository.findById(cartId).get();
-            return new ApiResponse<>("Article du panier supprimé", updatedCart);
-        }).orElse(new ApiResponse<>("Article du panier non trouvé avec l'identifiant " + itemId, null));
+            return new ApiResponse<>("Article du panier supprimé", updatedCart, HttpStatus.UNAUTHORIZED.value());
+        }).orElse(new ApiResponse<>("Article du panier non trouvé avec l'identifiant " + itemId, null, HttpStatus.UNAUTHORIZED.value()));
     }
 }

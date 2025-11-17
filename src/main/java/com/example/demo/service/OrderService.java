@@ -34,9 +34,9 @@ public class OrderService {
     public ApiResponse<Order> getOrderById(String id) {
         Optional<Order> order = orderRepository.findById(id);
         if (order.isPresent()) {
-            return new ApiResponse<>("La commande avec l'identifiant " + id + " a été récupérée avec succès", order.get());
+            return new ApiResponse<>("La commande avec l'identifiant " + id + " a été récupérée avec succès", order.get(), HttpStatus.UNAUTHORIZED.value());
         } else {
-            return new ApiResponse<>("Commande non trouvée avec l'identifiant " + id, null);
+            return new ApiResponse<>("Commande non trouvée avec l'identifiant " + id, null, HttpStatus.UNAUTHORIZED.value());
         }
     }
 
@@ -63,11 +63,11 @@ public class OrderService {
         for (OrderItemRequest itemDto : placeOrderRequest.getOrderItems()) {
             Optional<Product> productOpt = productRepository.findById(itemDto.getProductId());
             if (!productOpt.isPresent()) {
-                return new ApiResponse<>("Produit non trouvé avec l'identifiant : " + itemDto.getProductId(), null);
+                return new ApiResponse<>("Produit non trouvé avec l'identifiant : " + itemDto.getProductId(), null, HttpStatus.UNAUTHORIZED.value());
             }
             Product product = productOpt.get();
             if (product.getStock() < itemDto.getQuantity()) {
-                return new ApiResponse<>("Stock insuffisant pour le produit : " + product.getName() + ". Demandé : " + itemDto.getQuantity() + ", Disponible : " + product.getStock(), null);
+                return new ApiResponse<>("Stock insuffisant pour le produit : " + product.getName() + ". Demandé : " + itemDto.getQuantity() + ", Disponible : " + product.getStock(), null, HttpStatus.UNAUTHORIZED.value());
             }
         }
 
@@ -90,6 +90,6 @@ public class OrderService {
         order.setItems(orderItems);
         Order savedOrder = orderRepository.save(order);
 
-        return new ApiResponse<>("Commande passée avec succès", savedOrder);
+        return new ApiResponse<>("Commande passée avec succès", savedOrder, HttpStatus.UNAUTHORIZED.value());
     }
 }

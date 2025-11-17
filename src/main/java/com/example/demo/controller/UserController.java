@@ -13,10 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,24 +42,50 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@RequestBody User user) {
         User registeredUser = userService.register(user);
-        return new ResponseEntity<>(new ApiResponse<>("User registered successfully", registeredUser), HttpStatus.CREATED);
+        return new ResponseEntity<>(new ApiResponse<>("User registered successfully", registeredUser, HttpStatus.UNAUTHORIZED.value()), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
+
         System.out.println("🔑 Tentative de login pour : " + request.getUsername());
 
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()
+                    )
             );
             System.out.println("✅ Authentification OK");
 
-        } catch (Exception e) {
-            System.out.println("❌ Authentification échouée : " + e.getMessage());
+        } catch (BadCredentialsException e) {
+            System.out.println("❌ Password incorrect pour : " + request.getUsername());
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>("Identifiants incorrects", null));
+                    .body(new ApiResponse<>(
+                            "Mot de passe incorrect",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
+        } catch (UsernameNotFoundException e) {
+            System.out.println("❌ Username introuvable : " + request.getUsername());
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(
+                            "Nom d'utilisateur invalide",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la tentative de login : " + e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(
+                            "Identifiants incorrects",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
         }
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getUsername());
@@ -67,10 +95,14 @@ public class UserController {
         System.out.println("🎉 Token généré pour : " + request.getUsername());
 
         return ResponseEntity.ok(
-                new ApiResponse<>("Login successful",
-                        new AuthResponse(accessToken, refreshToken))
+                new ApiResponse<>(
+                        "Login successful",
+                        new AuthResponse(accessToken, refreshToken),
+                        HttpStatus.OK.value()
+                )
         );
     }
+
 
 
     @GetMapping("/profile")

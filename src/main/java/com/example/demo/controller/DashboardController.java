@@ -49,7 +49,7 @@ public class DashboardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         Page<Product> topProductsPage = dashboardService.getTopSellingProducts(page, size, storeId, startDate, endDate);
         PageResponse<Product> pageResponse = new PageResponse<>(topProductsPage);
-        return new ApiResponse<>("Top produits vendus", pageResponse);
+        return new ApiResponse<>("Top produits vendus", pageResponse, HttpStatus.UNAUTHORIZED.value());
     }
 
     @GetMapping("/orders/recent")
@@ -59,7 +59,7 @@ public class DashboardController {
             @RequestParam(required = false) String storeId) {
         Page<Order> recentOrdersPage = dashboardService.getRecentOrders(page, size, storeId);
         PageResponse<Order> pageResponse = new PageResponse<>(recentOrdersPage);
-        return new ApiResponse<>("Commandes récentes", pageResponse);
+        return new ApiResponse<>("Commandes récentes", pageResponse, HttpStatus.UNAUTHORIZED.value());
     }
 
     @GetMapping("/customers/recent")
@@ -68,7 +68,7 @@ public class DashboardController {
             @RequestParam(defaultValue = "10") int size) {
         Page<User> recentCustomersPage = dashboardService.getRecentCustomers(page, size);
         PageResponse<User> pageResponse = new PageResponse<>(recentCustomersPage);
-        return new ApiResponse<>("Clients récents", pageResponse);
+        return new ApiResponse<>("Clients récents", pageResponse, HttpStatus.UNAUTHORIZED.value());
     }
 
     @GetMapping("/products/{id}/statistics")

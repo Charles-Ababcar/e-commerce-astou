@@ -59,7 +59,7 @@ public class ClientControllerTest {
         Client client = new Client();
         client.setId("123");
 
-        given(clientService.getClientById(anyString())).willReturn(new ApiResponse<>("Client found", client));
+        given(clientService.getClientById(anyString())).willReturn(new ApiResponse<>("Client found", client, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/clients/123").with(csrf()))
                 .andExpect(status().isOk())
@@ -71,7 +71,7 @@ public class ClientControllerTest {
         Client client = new Client();
         client.setName("New Client");
 
-        given(clientService.createClient(any(Client.class))).willReturn(new ApiResponse<>("Client created", client));
+        given(clientService.createClient(any(Client.class))).willReturn(new ApiResponse<>("Client created", client, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(post("/api/clients").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,7 +82,7 @@ public class ClientControllerTest {
 
     @Test
     public void deleteClient_shouldDeleteClient() throws Exception {
-        given(clientService.deleteClient(anyString())).willReturn(new ApiResponse<>("Client deleted", null));
+        given(clientService.deleteClient(anyString())).willReturn(new ApiResponse<>("Client deleted", null, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(delete("/api/clients/123").with(csrf()))
                 .andExpect(status().isNoContent());

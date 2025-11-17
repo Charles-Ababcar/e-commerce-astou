@@ -51,14 +51,14 @@ public class DashboardService {
         stats.put("totalProducts", totalProducts);
         stats.put("bestSellingProduct", productRepository.findById(bestSellingProductId));
 
-        return new ApiResponse<>("Statistiques générales", stats);
+        return new ApiResponse<>("Statistiques générales", stats, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Map<String, Object>> getSalesTrends(String type, String storeId, LocalDate startDate, LocalDate endDate) {
         // La logique pour les tendances des ventes reste la même
         Map<String, Object> result = new HashMap<>();
         result.put("salesTrends", "Données sur les tendances des ventes basées sur les paramètres fournis.");
-        return new ApiResponse<>("Tendances des ventes", result);
+        return new ApiResponse<>("Tendances des ventes", result, HttpStatus.UNAUTHORIZED.value());
     }
 
     public Page<Product> getTopSellingProducts(int page, int size, String storeId, LocalDate startDate, LocalDate endDate) {
@@ -85,7 +85,7 @@ public class DashboardService {
         // La logique pour les statistiques de produits reste la même
         Map<String, Object> result = new HashMap<>();
         result.put("productStats", "Statistics for product with id " + id);
-        return new ApiResponse<>("Statistiques du produit", result);
+        return new ApiResponse<>("Statistiques du produit", result, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Map<String, Object>> getAbandonedCartsRate(String storeId, LocalDate startDate, LocalDate endDate) {
@@ -108,7 +108,7 @@ public class DashboardService {
 
         Map<String, Object> result = new HashMap<>();
         result.put("abandonedCartsRate", rate);
-        return new ApiResponse<>("Taux de paniers abandonnés", result);
+        return new ApiResponse<>("Taux de paniers abandonnés", result, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Map<String, Object>> getConversionRate(String storeId, LocalDate startDate, LocalDate endDate) {
@@ -138,7 +138,7 @@ public class DashboardService {
 
         Map<String, Object> result = new HashMap<>();
         result.put("conversionRate", rate);
-        return new ApiResponse<>("Taux de conversion", result);
+        return new ApiResponse<>("Taux de conversion", result, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Map<String, Object>> getRevenueByCategory(String storeId, LocalDate startDate, LocalDate endDate) {
@@ -148,7 +148,7 @@ public class DashboardService {
 
         Map<String, Object> result = new HashMap<>();
         result.put("revenueByCategory", revenueByCategory);
-        return new ApiResponse<>("Revenu par catégorie", result);
+        return new ApiResponse<>("Revenu par catégorie", result, HttpStatus.UNAUTHORIZED.value());
     }
 
     public ApiResponse<Map<String, Object>> getPerformanceComparison(LocalDate currentStart, LocalDate currentEnd, LocalDate previousStart, LocalDate previousEnd, String storeId) {
@@ -159,7 +159,7 @@ public class DashboardService {
         comparison.put("currentPeriod", currentPeriodStats);
         comparison.put("previousPeriod", previousPeriodStats);
 
-        return new ApiResponse<>("Comparaison des performances", comparison);
+        return new ApiResponse<>("Comparaison des performances", comparison, HttpStatus.UNAUTHORIZED.value());
     }
 
     private Page<Order> getOrders(LocalDate startDate, LocalDate endDate, String storeId, Pageable pageable) {

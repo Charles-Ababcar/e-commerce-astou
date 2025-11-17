@@ -65,7 +65,7 @@ public class OrderControllerTest {
         Order order = new Order();
         order.setId(orderId);
 
-        given(orderService.getOrderById(anyString())).willReturn(new ApiResponse<>("Order found", order));
+        given(orderService.getOrderById(anyString())).willReturn(new ApiResponse<>("Order found", order, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(get("/api/orders/" + orderId).with(csrf()))
                 .andExpect(status().isOk())
@@ -87,7 +87,7 @@ public class OrderControllerTest {
         order.setId(UUID.randomUUID().toString());
 
         given(orderService.placeOrder(any(PlaceOrderRequest.class)))
-                .willReturn(new ApiResponse<>("Order placed", order));
+                .willReturn(new ApiResponse<>("Order placed", order, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(post("/api/orders").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)

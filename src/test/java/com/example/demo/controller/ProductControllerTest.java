@@ -68,7 +68,7 @@ public class ProductControllerTest {
         MockMultipartFile productJson = new MockMultipartFile("product", "", "application/json", objectMapper.writeValueAsBytes(product));
         MockMultipartFile imageFile = new MockMultipartFile("file", "image.jpg", "image/jpeg", "some-image-bytes".getBytes());
 
-        given(productService.createProduct(any(Product.class), any())).willReturn(new ApiResponse<>("Product created", product));
+        given(productService.createProduct(any(Product.class), any())).willReturn(new ApiResponse<>("Product created", product, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(multipart("/api/products")
                         .file(productJson)
@@ -84,7 +84,7 @@ public class ProductControllerTest {
         Product updatedProduct = new Product();
         updatedProduct.setName("Updated Product");
 
-        given(productService.updateProduct(any(), any(Product.class), any())).willReturn(new ApiResponse<>("Product updated", updatedProduct));
+        given(productService.updateProduct(any(), any(Product.class), any())).willReturn(new ApiResponse<>("Product updated", updatedProduct, HttpStatus.UNAUTHORIZED.value()));
 
         MockMultipartFile productJson = new MockMultipartFile("product", "", "application/json", objectMapper.writeValueAsBytes(updatedProduct));
         MockMultipartFile imageFile = new MockMultipartFile("file", "image.jpg", "image/jpeg", "some-image-bytes".getBytes());

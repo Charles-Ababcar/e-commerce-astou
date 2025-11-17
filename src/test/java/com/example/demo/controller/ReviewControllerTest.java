@@ -68,7 +68,7 @@ public class ReviewControllerTest {
         review.setComment("Excellent!");
 
         given(reviewService.createReview(any(CreateReviewRequest.class)))
-                .willReturn(new ApiResponse<>("Review created successfully", review));
+                .willReturn(new ApiResponse<>("Review created successfully", review, HttpStatus.UNAUTHORIZED.value()));
 
         mockMvc.perform(post("/api/reviews").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
