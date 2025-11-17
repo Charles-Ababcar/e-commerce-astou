@@ -55,6 +55,19 @@ public class UserController {
         return new ResponseEntity<>(new ApiResponse<>("Login successful", new AuthResponse(accessToken, refreshToken)), HttpStatus.OK);
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileDto> profile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        User user = userDetails.user();
+
+        UserProfileDto profile = new UserProfileDto(
+                user.getUsername(),
+                user.getEmail(),
+                List.of(user.getRole().name())
+        );
+        return ResponseEntity.ok(profile);
+    }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
