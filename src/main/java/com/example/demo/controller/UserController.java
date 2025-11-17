@@ -131,7 +131,7 @@ public class UserController {
 
     @GetMapping("all")
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
-        List<User> users = userService.allUser();
+        List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(new
                 ApiResponse<>("Liste des utilisateurs récupérée avec succès", users,HttpStatus.OK.value())
         );
