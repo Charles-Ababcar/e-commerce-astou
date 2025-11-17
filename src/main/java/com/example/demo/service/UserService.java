@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -46,7 +47,7 @@ public class UserService {
         user.setCreatedAt(LocalDateTime.now());
         return userRepository.save(user);
     }
-    
+
 
     /**
      * Register public (role facultatif)
@@ -95,6 +96,17 @@ public class UserService {
         }
         userRepository.deleteById(id);
     }
+
+    /**
+     *
+     * @return
+     */
+    public List<User> allUser() {
+        List<User> users = userRepository.findAll();
+        System.out.println("Users: " + users);
+        return users;
+    }
+
 
     public User findByUsername(String username) {
         // ⚡ Correction : utiliser orElseThrow() pour récupérer le User

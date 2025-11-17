@@ -129,6 +129,14 @@ public class UserController {
     }
 
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+        List<User> users = userService.allUser();
+        return ResponseEntity.ok(new
+                ApiResponse<>("Liste des utilisateurs récupérée avec succès", users,HttpStatus.OK.value())
+        );
+    }
+
     // -----------------------
     // DELETE USER
     // -----------------------
