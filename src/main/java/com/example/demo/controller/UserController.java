@@ -5,6 +5,7 @@ import com.example.demo.config.CustomUserDetailsService;
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.UserProfileDto;
+import com.example.demo.dto.request.LoginRequest;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
@@ -43,17 +44,34 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody User user) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
+        System.out.println("🔑 Tentative de login pour : " + request.getUsername());
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+            System.out.println("✅ Authentification OK");
+
+        } catch (Exception e) {
+            System.out.println("❌ Authentification échouée : " + e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>("Identifiants incorrects", null));
+        }
+
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getUsername());
+        String accessToken = jwtUtil.generateToken(userDetails.getUsername());
+        String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
+
+        System.out.println("🎉 Token généré pour : " + request.getUsername());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>("Login successful",
+                        new AuthResponse(accessToken, refreshToken))
         );
-
-        final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
-        final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
-        final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
-
-        return new ResponseEntity<>(new ApiResponse<>("Login successful", new AuthResponse(accessToken, refreshToken)), HttpStatus.OK);
     }
+
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileDto> profile() {
