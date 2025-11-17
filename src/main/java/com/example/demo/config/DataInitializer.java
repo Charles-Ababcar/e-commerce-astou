@@ -21,7 +21,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (userRepository.findByUsername("superadmin") == null) {
+        if (userRepository.findByUsername("superadmin").isEmpty()) {
             User superAdmin = new User();
             superAdmin.setId(UUID.randomUUID().toString());
             superAdmin.setUsername("superadmin");
