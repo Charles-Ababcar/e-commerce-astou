@@ -60,7 +60,7 @@ public class UserService {
         // 👉 Utiliser le rôle fourni, sinon USER par défaut
         if (user.getRole() == null) {
             user.setRole(User.Role.USER);
-        } {
+        } else {
             user.setRole(user.getRole());
         }
 
