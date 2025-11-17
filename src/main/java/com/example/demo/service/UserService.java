@@ -60,6 +60,8 @@ public class UserService {
         // 👉 Utiliser le rôle fourni, sinon USER par défaut
         if (user.getRole() == null) {
             user.setRole(User.Role.USER);
+        } {
+            user.setRole(user.getRole());
         }
 
         user.setCreatedAt(LocalDateTime.now());
