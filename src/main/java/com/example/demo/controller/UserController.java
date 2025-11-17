@@ -39,12 +39,26 @@ public class UserController {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
+
+    // -----------------------
+    // REGISTER PUBLIC
+    // -----------------------
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(@RequestBody User user) {
         User registeredUser = userService.register(user);
-        return new ResponseEntity<>(new ApiResponse<>("User registered successfully", registeredUser, HttpStatus.UNAUTHORIZED.value()), HttpStatus.CREATED);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        "User registered successfully",
+                        registeredUser,
+                        HttpStatus.CREATED.value()
+                ));
     }
 
+
+    // -----------------------
+    // LOGIN
+    // -----------------------
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
 
@@ -60,39 +74,13 @@ public class UserController {
             System.out.println("✅ Authentification OK");
 
         } catch (BadCredentialsException e) {
-            System.out.println("❌ Password incorrect pour : " + request.getUsername());
-
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>(
-                            "Mot de passe incorrect",
-                            null,
-                            HttpStatus.UNAUTHORIZED.value()
-                    ));
-        } catch (UsernameNotFoundException e) {
-            System.out.println("❌ Username introuvable : " + request.getUsername());
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>(
-                            "Nom d'utilisateur invalide",
-                            null,
-                            HttpStatus.UNAUTHORIZED.value()
-                    ));
-        } catch (Exception e) {
-            System.out.println("❌ Erreur lors de la tentative de login : " + e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>(
-                            "Identifiants incorrects",
-                            null,
-                            HttpStatus.UNAUTHORIZED.value()
-                    ));
+                    .body(new ApiResponse<>("Mot de passe incorrect", null, HttpStatus.UNAUTHORIZED.value()));
         }
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getUsername());
         String accessToken = jwtUtil.generateToken(userDetails.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
-
-        System.out.println("🎉 Token généré pour : " + request.getUsername());
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -104,7 +92,9 @@ public class UserController {
     }
 
 
-
+    // -----------------------
+    // PROFILE
+    // -----------------------
     @GetMapping("/profile")
     public ResponseEntity<UserProfileDto> profile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -116,12 +106,41 @@ public class UserController {
                 user.getEmail(),
                 List.of(user.getRole().name())
         );
+
         return ResponseEntity.ok(profile);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        // côté client supprime token
-        return ResponseEntity.ok("Logged out successfully");
+
+    // -----------------------
+    // UPDATE USER
+    // -----------------------
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<User>> updateUser(
+            @PathVariable String id,
+            @RequestBody User updatedUser) {
+
+        User user = userService.updateUser(id, updatedUser);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "User updated successfully",
+                user,
+                HttpStatus.OK.value()
+        ));
+    }
+
+
+    // -----------------------
+    // DELETE USER
+    // -----------------------
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable String id) {
+        userService.deleteUser(id);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "User deleted successfully",
+                "OK",
+                HttpStatus.OK.value()
+        ));
     }
 }
+

@@ -46,13 +46,54 @@ public class UserService {
         user.setCreatedAt(LocalDateTime.now());
         return userRepository.save(user);
     }
+    
 
+    /**
+     * Register public (role facultatif)
+     */
     public User register(User user) {
         user.setId(UUID.randomUUID().toString());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(User.Role.USER);
+
+        // 👉 Utiliser le rôle fourni, sinon USER par défaut
+        if (user.getRole() == null) {
+            user.setRole(User.Role.USER);
+        }
+
         user.setCreatedAt(LocalDateTime.now());
         return userRepository.save(user);
+    }
+
+    /**
+     * Update utilisateur
+     */
+    public User updateUser(String id, User updatedUser) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (updatedUser.getUsername() != null)
+            user.setUsername(updatedUser.getUsername());
+
+        if (updatedUser.getEmail() != null)
+            user.setEmail(updatedUser.getEmail());
+
+        if (updatedUser.getPassword() != null)
+            user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+
+        if (updatedUser.getRole() != null)
+            user.setRole(updatedUser.getRole());
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Delete user
+     */
+    public void deleteUser(String id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("Utilisateur introuvable");
+        }
+        userRepository.deleteById(id);
     }
 
     public User findByUsername(String username) {
