@@ -101,9 +101,13 @@ public class UserService {
      *
      * @return
      */
-    public List<User> allUser() {
+    public List<User> getAllUsers() {
         List<User> users = userRepository.findAll();
-        System.out.println("Users: " + users);
+
+        if (users.isEmpty()) {
+            throw new RuntimeException("Aucun utilisateur trouvé");
+        }
+
         return users;
     }
 
