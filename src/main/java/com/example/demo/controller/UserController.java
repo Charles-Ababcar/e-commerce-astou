@@ -66,11 +66,13 @@ public class UserController {
             AuthResponse authResponse = new AuthResponse(accessToken, refreshToken);
             return new ResponseEntity<>(new ApiResponse<>("Login successful", authResponse), HttpStatus.OK);
 
-        } catch (Exception ex) {
+        }  catch (Exception ex) {
             // Log complet de l'erreur
-            System.out.println("❌ Échec de connexion pour: " + u
-
-
+            System.out.println("❌ Échec de connexion pour: " + user.getUsername());
+            ex.printStackTrace();
+            return new ResponseEntity<>(new ApiResponse<>("Login failed: " + ex.getMessage(), null), HttpStatus.FORBIDDEN);
+        }
+    }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
