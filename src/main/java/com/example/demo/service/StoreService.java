@@ -22,7 +22,6 @@ public class StoreService {
     }
 
     public Store createStore(Store store, MultipartFile imageFile) throws IOException {
-        store.setId(UUID.randomUUID().toString());
         if (imageFile != null && !imageFile.isEmpty()) {
             store.setImage(imageFile.getBytes());
         }

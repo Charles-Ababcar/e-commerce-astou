@@ -34,11 +34,7 @@ public class OrderService {
 
     public ApiResponse<Order> getOrderById(String id) {
         Optional<Order> order = orderRepository.findById(id);
-        if (order.isPresent()) {
-            return new ApiResponse<>("La commande avec l'identifiant " + id + " a été récupérée avec succès", order.get(), HttpStatus.UNAUTHORIZED.value());
-        } else {
-            return new ApiResponse<>("Commande non trouvée avec l'identifiant " + id, null, HttpStatus.UNAUTHORIZED.value());
-        }
+        return order.map(value -> new ApiResponse<>("La commande avec l'identifiant " + id + " a été récupérée avec succès", value, HttpStatus.UNAUTHORIZED.value())).orElseGet(() -> new ApiResponse<>("Commande non trouvée avec l'identifiant " + id, null, HttpStatus.UNAUTHORIZED.value()));
     }
 
     public ApiResponse<Order> placeOrder(PlaceOrderRequest placeOrderRequest) {
@@ -63,7 +59,7 @@ public class OrderService {
         // Validate and process order items
         for (OrderItemRequest itemDto : placeOrderRequest.getOrderItems()) {
             Optional<Product> productOpt = productRepository.findById(itemDto.getProductId());
-            if (!productOpt.isPresent()) {
+            if (productOpt.isEmpty()) {
                 return new ApiResponse<>("Produit non trouvé avec l'identifiant : " + itemDto.getProductId(), null, HttpStatus.UNAUTHORIZED.value());
             }
             Product product = productOpt.get();

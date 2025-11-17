@@ -27,7 +27,6 @@ public class ShopService {
     }
 
     public Shop createShop(Shop shop, MultipartFile imageFile) throws IOException {
-        shop.setId(UUID.randomUUID().toString());
         shop.setCreatedAt(LocalDateTime.now());
         shop.setUpdatedAt(LocalDateTime.now());
         if (imageFile != null && !imageFile.isEmpty()) {

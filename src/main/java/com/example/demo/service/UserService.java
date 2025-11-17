@@ -41,7 +41,6 @@ public class UserService {
     }
 
     private User saveUser(User user, User.Role role) {
-        user.setId(UUID.randomUUID().toString());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(role);
         user.setCreatedAt(LocalDateTime.now());
@@ -53,7 +52,6 @@ public class UserService {
      * Register public (role facultatif)
      */
     public User register(User user) {
-        user.setId(UUID.randomUUID().toString());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // 👉 Utiliser le rôle fourni, sinon USER par défaut
