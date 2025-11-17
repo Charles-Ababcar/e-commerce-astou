@@ -52,6 +52,9 @@ public class UserService {
      * Register public (role facultatif)
      */
     public User register(User user) {
+        user.setName(user.getName());
+        user.setUsername(user.getUsername());
+        user.setEmail(user.getPassword());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // 👉 Utiliser le rôle fourni, sinon USER par défaut
