@@ -12,8 +12,14 @@ public record CustomUserDetails(User user) implements UserDetails {
 
     // Eviter les getters qui exposent les relations ManyToMany
     public User getUserSafe() {
-        return new User(user.getId(), user.getUsername(), user.getPassword(), user.getRole());
+        User safeUser = new User();
+        safeUser.setId(user.getId());
+        safeUser.setUsername(user.getUsername());
+        safeUser.setPassword(user.getPassword());
+        safeUser.setRole(user.getRole());
+        return safeUser;
     }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -49,4 +55,6 @@ public record CustomUserDetails(User user) implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
 }
