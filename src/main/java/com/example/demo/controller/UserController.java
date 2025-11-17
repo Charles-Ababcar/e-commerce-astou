@@ -129,7 +129,7 @@ public class UserController {
     }
 
 
-    @GetMapping
+    @GetMapping("all")
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         List<User> users = userService.allUser();
         return ResponseEntity.ok(new
