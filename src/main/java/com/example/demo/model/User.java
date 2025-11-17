@@ -39,6 +39,9 @@ public class User {
     )
     private Set<User> contacts;
 
+    public User(String id, String username, String password, Role role) {
+    }
+
 
     public enum Role {
         SUPER_ADMIN,
