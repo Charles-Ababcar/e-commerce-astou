@@ -10,6 +10,7 @@ import com.example.demo.repository.CartItemRepository;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
