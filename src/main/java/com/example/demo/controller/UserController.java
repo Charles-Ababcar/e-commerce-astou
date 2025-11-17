@@ -60,20 +60,32 @@ public class UserController {
             System.out.println("✅ Authentification OK");
 
         } catch (BadCredentialsException e) {
-            System.out.println("❌ Mot de passe incorrect pour : " + request.getUsername());
+            System.out.println("❌ Password incorrect pour : " + request.getUsername());
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>("Mot de passe incorrect", null, 401));
+                    .body(new ApiResponse<>(
+                            "Mot de passe incorrect",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
         } catch (UsernameNotFoundException e) {
             System.out.println("❌ Username introuvable : " + request.getUsername());
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>("Nom d'utilisateur invalide", null, 401));
+                    .body(new ApiResponse<>(
+                            "Nom d'utilisateur invalide",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
         } catch (Exception e) {
-            System.out.println("❌ Erreur inconnue lors du login : " + e.getMessage());
+            System.out.println("❌ Erreur lors de la tentative de login : " + e.getMessage());
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>("Identifiants incorrects", null, 401));
+                    .body(new ApiResponse<>(
+                            "Identifiants incorrects",
+                            null,
+                            HttpStatus.UNAUTHORIZED.value()
+                    ));
         }
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getUsername());
@@ -86,11 +98,10 @@ public class UserController {
                 new ApiResponse<>(
                         "Login successful",
                         new AuthResponse(accessToken, refreshToken),
-                        200
+                        HttpStatus.OK.value()
                 )
         );
     }
-
 
 
 
