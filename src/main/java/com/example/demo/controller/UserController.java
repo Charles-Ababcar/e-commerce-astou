@@ -44,24 +44,15 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody User user) {
-        System.out.println("🔑 Tentative de connexion pour l'utilisateur: " + user.getUsername());
-
-        // Authentification
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
         );
 
-        // Générer les tokens directement avec le username
-        final String accessToken = jwtUtil.generateToken(user.getUsername());
-        final String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+        final UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getUsername());
+        final String accessToken = jwtUtil.generateToken(userDetails.getUsername());
+        final String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
 
-        System.out.println("✅ Authentification réussie pour: " + user.getUsername());
-        System.out.println("🔑 Access Token: " + accessToken);
-
-        return new ResponseEntity<>(
-                new ApiResponse<>("Login successful", new AuthResponse(accessToken, refreshToken)),
-                HttpStatus.OK
-        );
+        return new ResponseEntity<>(new ApiResponse<>("Login successful", new AuthResponse(accessToken, refreshToken)), HttpStatus.OK);
     }
 
 
