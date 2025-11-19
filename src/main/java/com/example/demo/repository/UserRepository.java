@@ -9,10 +9,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, String> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    @Query("SELECT u FROM User u JOIN u.stores s WHERE s.id = :storeId")
-    long countByStoreId(@Param("storeId") String storeId);
+
 
     Page<User> findByOrderByCreatedAtDesc(Pageable pageable);
 

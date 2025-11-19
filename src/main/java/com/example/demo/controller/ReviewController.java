@@ -20,7 +20,7 @@ public class ReviewController {
     private ReviewService reviewService;
 
     @GetMapping
-    public ResponseEntity<PageResponse<Review>> getReviewsByProductId(@RequestParam String productId, Pageable pageable) {
+    public ResponseEntity<PageResponse<Review>> getReviewsByProductId(@RequestParam Long productId, Pageable pageable) {
         Page<Review> reviews = reviewService.getReviewsByProductId(productId, pageable);
         return new ResponseEntity<>(new PageResponse<>(reviews), HttpStatus.OK);
     }

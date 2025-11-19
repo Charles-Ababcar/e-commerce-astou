@@ -1,7 +1,5 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.Store;
-import com.example.demo.service.StoreService;
 import com.example.demo.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

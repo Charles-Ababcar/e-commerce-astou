@@ -2,8 +2,11 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.PageResponse;
+import com.example.demo.dto.request.ProductRequestDTO;
+import com.example.demo.dto.request.ProductResponseDTO;
 import com.example.demo.model.Product;
 import com.example.demo.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,38 +17,35 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
-    private ProductService productService;
+    private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<PageResponse<Product>> getAllProducts(Pageable pageable) {
-        Page<Product> products = productService.getAllProducts(pageable);
-        return new ResponseEntity<>(new PageResponse<>(products), HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Product>> getProductById(@PathVariable String id) {
-        ApiResponse<Product> response = productService.getProductById(id);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public Object getProducts(
+            @RequestParam(required = false) Long shopId,
+            Pageable pageable) {
+        return productService.getAllProducts(shopId, pageable);
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Product>> createProduct(@RequestPart("product") Product product, @RequestPart(value = "image", required = false) MultipartFile image) {
-        ApiResponse<Product> response = productService.createProduct(product, image);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    public ApiResponse<ProductResponseDTO> create(
+            @ModelAttribute ProductRequestDTO dto,
+            @RequestParam(required = false) MultipartFile image) {
+        return productService.createProduct(dto, image);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable String id, @RequestPart("product") Product product, @RequestPart(value = "image", required = false) MultipartFile image) {
-        ApiResponse<Product> response = productService.updateProduct(id, product, image);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public ApiResponse<ProductResponseDTO> update(
+            @PathVariable Long id,
+            @ModelAttribute ProductRequestDTO dto,
+            @RequestParam(required = false) MultipartFile image) {
+        return productService.updateProduct(id, dto, image);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable String id) {
-        ApiResponse<Void> response = productService.deleteProduct(id);
-        return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
+    public ApiResponse<Void> delete(@PathVariable Long id) {
+        return productService.deleteProduct(id);
     }
 }

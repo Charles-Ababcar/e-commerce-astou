@@ -2,15 +2,15 @@ package com.example.demo.dto.request;
 
 public class OrderItemRequest {
 
-    private String productId;
+    private Long productId;
     private int quantity;
 
     // Getters and Setters
-    public String getProductId() {
+    public Long getProductId() {
         return productId;
     }
 
-    public void setProductId(String productId) {
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 

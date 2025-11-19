@@ -26,7 +26,7 @@ public class ReviewService {
     @Autowired
     private UserRepository userRepository;
 
-    public Page<Review> getReviewsByProductId(String productId, Pageable pageable) {
+    public Page<Review> getReviewsByProductId(Long productId, Pageable pageable) {
         return reviewRepository.findByProductId(productId, pageable);
     }
 

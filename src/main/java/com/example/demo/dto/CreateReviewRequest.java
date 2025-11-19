@@ -1,24 +1,24 @@
 package com.example.demo.dto;
 
 public class CreateReviewRequest {
-    private String productId;
-    private String userId;
+    private Long productId;
+    private Long userId;
     private int rating;
     private String comment;
 
-    public String getProductId() {
+    public Long getProductId() {
         return productId;
     }
 
-    public void setProductId(String productId) {
+    public void setProductId(Long productId) {
         this.productId = productId;
     }
 
-    public String getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 

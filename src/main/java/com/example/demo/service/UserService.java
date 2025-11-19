@@ -1,5 +1,8 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.request.UserRegisterDTO;
+import com.example.demo.dto.request.UserRequestDTO;
+import com.example.demo.dto.UserResponseDTO;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -23,77 +26,73 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User createUser(User user, User.Role role) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
-
-        // ⚡ Correction : utiliser orElseThrow() sur l'Optional
+    /**
+     * Créer un utilisateur (par un admin ou super-admin)
+     */
+    public UserResponseDTO createUser(UserRequestDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = auth.getName();
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new SecurityException("Utilisateur courant introuvable"));
 
-        if (currentUser.getRole() == User.Role.SUPER_ADMIN && (role == User.Role.ADMIN || role == User.Role.USER)) {
-            return saveUser(user, role);
-        } else if (currentUser.getRole() == User.Role.ADMIN && role == User.Role.USER) {
-            return saveUser(user, role);
-        } else {
-            throw new SecurityException("Vous n'êtes pas autorisé à créer ce type d'utilisateur.");
-        }
-    }
+        User.Role role = dto.getRole() != null ? dto.getRole() : User.Role.USER;
 
-    private User saveUser(User user, User.Role role) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(role);
-        user.setCreatedAt(LocalDateTime.now());
-        return userRepository.save(user);
-    }
+        if ((currentUser.getRole() == User.Role.SUPER_ADMIN && (role == User.Role.ADMIN || role == User.Role.USER))
+                || (currentUser.getRole() == User.Role.ADMIN && role == User.Role.USER)) {
 
+            User user = new User();
+            user.setName(dto.getName());
+            user.setUsername(dto.getUsername());
+            user.setEmail(dto.getEmail());
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            user.setRole(role);
+            user.setCreatedAt(LocalDateTime.now());
 
-    /**
-     * Register public (role facultatif)
-     */
-    public User register(User user) {
-        user.setName(user.getName());
-        user.setUsername(user.getUsername());
-        user.setEmail(user.getPassword());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // 👉 Utiliser le rôle fourni, sinon USER par défaut
-        if (user.getRole() == null) {
-            user.setRole(User.Role.USER);
-        } else {
-            user.setRole(user.getRole());
+            return convertToDto(userRepository.save(user));
         }
 
-        user.setCreatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+        throw new SecurityException("Vous n'êtes pas autorisé à créer ce type d'utilisateur.");
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
 
     /**
-     * Update utilisateur
+     * Inscription publique (role USER par défaut)
      */
-    public User updateUser(String id, User updatedUser) {
+    public UserResponseDTO register(UserRegisterDTO dto) {
+        User user = new User();
+        user.setName(dto.getName());
+        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRole(User.Role.USER);
+        user.setCreatedAt(LocalDateTime.now());
+
+        return convertToDto(userRepository.save(user));
+    }
+
+    /**
+     * Mettre à jour un utilisateur
+     */
+    public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
-        if (updatedUser.getUsername() != null)
-            user.setUsername(updatedUser.getUsername());
+        if (dto.getName() != null) user.setName(dto.getName());
+        if (dto.getUsername() != null) user.setUsername(dto.getUsername());
+        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
+        if (dto.getPassword() != null) user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (dto.getRole() != null) user.setRole(dto.getRole());
 
-        if (updatedUser.getEmail() != null)
-            user.setEmail(updatedUser.getEmail());
-
-        if (updatedUser.getPassword() != null)
-            user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
-
-        if (updatedUser.getRole() != null)
-            user.setRole(updatedUser.getRole());
-
-        return userRepository.save(user);
+        return convertToDto(userRepository.save(user));
     }
 
     /**
-     * Delete user
+     * Supprimer un utilisateur
      */
-    public void deleteUser(String id) {
+    public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("Utilisateur introuvable");
         }
@@ -101,23 +100,66 @@ public class UserService {
     }
 
     /**
-     *
-     * @return
+     * Récupérer tous les utilisateurs
      */
-    public List<User> getAllUsers() {
+    public List<UserResponseDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
-
         if (users.isEmpty()) {
             throw new RuntimeException("Aucun utilisateur trouvé");
         }
+        return users.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
 
-        return users;
+    /**
+     * Récupérer un utilisateur par ID
+     */
+    public UserResponseDTO getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+        return convertToDto(user);
     }
 
 
-    public User findByUsername(String username) {
-        // ⚡ Correction : utiliser orElseThrow() pour récupérer le User
-        return userRepository.findByUsername(username)
+
+    /**
+     * Changer son propre mot de passe (authentifié)
+     */
+    public void updatePasswordSelf(Long userId, String oldPassword, String newPassword) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        // Vérifier l'ancien mot de passe
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("Ancien mot de passe incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    /**
+     * Changer le mot de passe d'un utilisateur (par un admin)
+     */
+    public void updatePasswordByAdmin(Long userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    /**
+     * Convertir User -> UserResponseDTO
+     */
+    private UserResponseDTO convertToDto(User user) {
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        dto.setCreatedAt(user.getCreatedAt());
+
+        return dto;
     }
 }

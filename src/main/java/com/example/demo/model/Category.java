@@ -3,23 +3,21 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.UuidGenerator;
+
+import java.util.List;
 
 @Setter
 @Getter
 @Entity
-public class Review {
+public class Category {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Product product;
+    private String name;
 
-    @ManyToOne
-    private User user;
-
-    private int rating;
-    private String comment;
+    @OneToMany(mappedBy = "category")
+    private List<Product> products;
 
 }

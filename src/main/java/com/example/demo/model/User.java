@@ -10,8 +10,8 @@ import java.util.Set;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String name;
 
@@ -24,13 +24,20 @@ public class User {
 
     private LocalDateTime createdAt;
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_store",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "store_id")
-    )
-    private Set<Store> stores;
+
+    private  LocalDateTime updatedAt;
+
+
+    @Column(nullable = false)
+    private Boolean isActive = true;
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
 
     @ManyToMany
     @JoinTable(
@@ -40,6 +47,13 @@ public class User {
     )
     private Set<User> contacts;
 
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     public enum Role {
         SUPER_ADMIN,
@@ -47,11 +61,11 @@ public class User {
         USER
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -95,13 +109,6 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public Set<Store> getStores() {
-        return stores;
-    }
-
-    public void setStores(Set<Store> stores) {
-        this.stores = stores;
-    }
 
     public Set<User> getContacts() {
         return contacts;

@@ -5,33 +5,44 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 
-public interface ProductRepository extends JpaRepository<Product, String> {
+public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    long countByStoreId(String storeId);
+    // Compter tous les produits
+    long count();
 
+    // Filtrer par catégorie
+    long countByCategoryId(Long categoryId);
+
+    Page<Product> findAllByCategoryId(Long categoryId, Pageable pageable);
+
+    // Recherche par nom
+    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    Page<Product> findByShopId(Long shopId, Pageable pageable);
+
+
+    // ------------------------------------------
+    // TOP SELLING PRODUCTS
+    // ------------------------------------------
     @Query(value = "SELECT p.* FROM product p " +
             "JOIN order_item oi ON p.id = oi.product_id " +
             "JOIN \"order\" o ON oi.order_id = o.id " +
-            "WHERE (:storeId IS NULL OR o.store_id = :storeId) " +
-            "AND (CAST(:startDate AS timestamp) IS NULL OR o.created_at >= CAST(:startDate AS timestamp)) " +
-            "AND (CAST(:endDate AS timestamp) IS NULL OR o.created_at <= CAST(:endDate AS timestamp)) " +
+            "WHERE (:startDate IS NULL OR o.created_at >= :startDate) " +
+            "AND (:endDate IS NULL OR o.created_at <= :endDate) " +
             "GROUP BY p.id " +
             "ORDER BY SUM(oi.quantity) DESC",
             countQuery = "SELECT count(*) FROM (SELECT p.id FROM product p " +
                     "JOIN order_item oi ON p.id = oi.product_id " +
                     "JOIN \"order\" o ON oi.order_id = o.id " +
-                    "WHERE (:storeId IS NULL OR o.store_id = :storeId) " +
-                    "AND (CAST(:startDate AS timestamp) IS NULL OR o.created_at >= CAST(:startDate AS timestamp)) " +
-                    "AND (CAST(:endDate AS timestamp) IS NULL OR o.created_at <= CAST(:endDate AS timestamp)) " +
-                    "GROUP BY p.id) as top_products",
+                    "WHERE (:startDate IS NULL OR o.created_at >= :startDate) " +
+                    "AND (:endDate IS NULL OR o.created_at <= :endDate) " +
+                    "GROUP BY p.id) as top_prod",
             nativeQuery = true)
     Page<Product> findTopSellingProducts(
-            @Param("storeId") String storeId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
             Pageable pageable);
 }

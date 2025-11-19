@@ -8,7 +8,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -23,8 +22,9 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         if (userRepository.findByUsername("superadmin").isEmpty()) {
             User superAdmin = new User();
-            superAdmin.setId(UUID.randomUUID().toString());
             superAdmin.setUsername("superadmin");
+            superAdmin.setEmail("superadmin@gmail.com");
+            superAdmin.setName("Ababacar Charles GUEYE");
             superAdmin.setPassword(passwordEncoder.encode("superadminpassword")); // Change this in a real application
             superAdmin.setRole(User.Role.SUPER_ADMIN);
             superAdmin.setCreatedAt(LocalDateTime.now());

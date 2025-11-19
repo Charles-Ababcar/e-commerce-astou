@@ -8,8 +8,8 @@ import java.util.List;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String name;
     private String description;
@@ -22,6 +22,18 @@ public class Product {
 
     private int stock;
 
+    private boolean isActive = true;
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -32,8 +44,6 @@ public class Product {
     @JoinColumn(name = "shop_id", nullable = false)
     private Shop shop;
 
-    @Column(name = "store_id")
-    private String storeId;
 
     @OneToMany(mappedBy = "product")
     private List<CartItem> cartItems;
@@ -41,11 +51,26 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<OrderItem> orderItems;
 
-    public String getId() {
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -113,13 +138,7 @@ public class Product {
         this.shop = shop;
     }
 
-    public String getStoreId() {
-        return storeId;
-    }
 
-    public void setStoreId(String storeId) {
-        this.storeId = storeId;
-    }
 
     public List<CartItem> getCartItems() {
         return cartItems;

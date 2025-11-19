@@ -25,7 +25,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Client>> getClientById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Client>> getClientById(@PathVariable Long id) {
         ApiResponse<Client> response = clientService.getClientById(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -37,7 +37,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteClient(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteClient(@PathVariable Long id) {
         ApiResponse<Void> response = clientService.deleteClient(id);
         return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
     }

@@ -19,7 +19,7 @@ public class ClientService {
         return clientRepository.findAll(pageable);
     }
 
-    public ApiResponse<Client> getClientById(String id) {
+    public ApiResponse<Client> getClientById(Long id) {
         Client client = clientRepository.findById(id).orElse(null);
         return new ApiResponse<>("Successfully retrieved client with id " + id, client, HttpStatus.UNAUTHORIZED.value());
     }
@@ -29,7 +29,7 @@ public class ClientService {
         return new ApiResponse<>("Client créé avec succès", createdClient, HttpStatus.UNAUTHORIZED.value());
     }
 
-    public ApiResponse<Void> deleteClient(String id) {
+    public ApiResponse<Void> deleteClient(Long id) {
         clientRepository.deleteById(id);
         return new ApiResponse<>("Successfully deleted client with id " + id, null, HttpStatus.UNAUTHORIZED.value());
     }
