@@ -18,7 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")
-@PreAuthorize("hasAnyRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN' , 'SUPER_ADMIN')")
 public class DashboardController {
 
     @Autowired

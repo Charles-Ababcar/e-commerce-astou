@@ -1,15 +1,16 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.AddItemRequest;
-import com.example.demo.dto.ApiResponse;
-import com.example.demo.dto.UpdateItemRequest;
+import com.example.demo.dto.*;
+import com.example.demo.dto.request.CartDTO;
+import com.example.demo.dto.request.CartsDTO;
 import com.example.demo.dto.request.CreateCartRequestDTO;
 import com.example.demo.model.Cart;
-
 import com.example.demo.service.CartServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/carts")
@@ -22,58 +23,61 @@ public class CartController {
     }
 
     /**
-     * Récupérer un panier
+     * Récupérer un panier par ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Cart>> getCartById(@PathVariable Long id) {
-        ApiResponse<Cart> response = cartService.getCartById(id);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    public ResponseEntity<ApiResponse<CartDTO>> getCartById(@PathVariable Long id) {
+        ApiResponse<CartDTO> response = cartService.getCartById(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**
-     * Créer un panier vide ou avec un premier produit
-     * DTO = seulement productId + quantity
+     * Récupérer tous les paniers sans utilisateur
+     */
+
+
+    /**
+     * Créer un panier avec un premier produit
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<Cart>> createCart(@RequestBody CreateCartRequestDTO dto) {
-        ApiResponse<Cart> response = cartService.createCart(dto);
+    public ResponseEntity<ApiResponse<CartDTO>> createCart(@RequestBody CreateCartRequestDTO dto) {
+        ApiResponse<CartDTO> response = cartService.createCart(dto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     /**
-     * Ajouter un produit à un panier existant
+     * Ajouter un article dans un panier existant
      */
     @PostMapping("/{cartId}/items")
-    public ResponseEntity<ApiResponse<Cart>> addItemToCart(
+    public ResponseEntity<ApiResponse<CartDTO>> addItemToCart(
             @PathVariable Long cartId,
             @RequestBody AddItemRequest request) {
-
-        ApiResponse<Cart> response = cartService.addItemToCart(cartId, request);
+        ApiResponse<CartDTO> response = cartService.addItemToCart(cartId, request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     /**
-     * Modifier la quantité d’un article du panier
+     * Modifier la quantité d’un article dans le panier
      */
     @PutMapping("/{cartId}/items/{itemId}")
-    public ResponseEntity<ApiResponse<Cart>> updateCartItem(
+    public ResponseEntity<ApiResponse<CartDTO>> updateCartItem(
             @PathVariable Long cartId,
             @PathVariable Long itemId,
             @RequestBody UpdateItemRequest request) {
 
-        ApiResponse<Cart> response = cartService.updateCartItem(cartId, itemId, request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        ApiResponse<CartDTO> response = cartService.updateCartItem(cartId, itemId, request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**
      * Supprimer un article du panier
      */
     @DeleteMapping("/{cartId}/items/{itemId}")
-    public ResponseEntity<ApiResponse<Cart>> removeCartItem(
+    public ResponseEntity<ApiResponse<CartDTO>> removeCartItem(
             @PathVariable Long cartId,
             @PathVariable Long itemId) {
 
-        ApiResponse<Cart> response = cartService.removeCartItem(cartId, itemId);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        ApiResponse<CartDTO> response = cartService.removeCartItem(cartId, itemId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

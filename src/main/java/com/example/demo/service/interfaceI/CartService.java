@@ -3,18 +3,23 @@ package com.example.demo.service.interfaceI;
 import com.example.demo.dto.AddItemRequest;
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.UpdateItemRequest;
+import com.example.demo.dto.request.CartDTO;
+import com.example.demo.dto.request.CartsDTO;
 import com.example.demo.dto.request.CreateCartRequestDTO;
 import com.example.demo.model.Cart;
 
+import java.util.List;
+
 public interface CartService {
 
-    ApiResponse<Cart> getCartById(Long cartId);
+    ApiResponse<CartDTO> createCart(CreateCartRequestDTO dto);
 
-    ApiResponse<Cart> createCart(CreateCartRequestDTO dto);
+    ApiResponse<CartDTO> addItemToCart(Long cartId, AddItemRequest request);
 
-    ApiResponse<Cart> addItemToCart(Long cartId, AddItemRequest request);
+    public ApiResponse<CartDTO> getCartById(Long cartId);
 
-    ApiResponse<Cart> updateCartItem(Long cartId, Long itemId, UpdateItemRequest request);
 
-    ApiResponse<Cart> removeCartItem(Long cartId, Long itemId);
+    ApiResponse<CartDTO> updateCartItem(Long cartId, Long itemId, UpdateItemRequest request);
+
+    ApiResponse<CartDTO> removeCartItem(Long cartId, Long itemId);
 }

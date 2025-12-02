@@ -8,7 +8,9 @@ import com.example.demo.repository.ShopRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,12 +45,11 @@ public class ShopService {
 
         // 👉 Enregistrer l’image avec URL complète
         if (image != null && !image.isEmpty()) {
-            String imageUrl = imageUploadService.uploadImage(
-                    image,
-                    dto.getName().replaceAll("\\s+", "_")
-            );
+            String cleanName = dto.getName().replaceAll("[^a-zA-Z0-9]", "_");
+            String imageUrl = imageUploadService.uploadImage(image, cleanName);
             shop.setImageUrl(imageUrl);
         }
+
 
         Shop saved = shopRepository.save(shop);
 
@@ -60,18 +61,29 @@ public class ShopService {
     }
 
 
+    // Dans votre Service ou Repository
     public ApiResponse<ShopResponseDTO> updateShop(Long id, ShopRequestDTO dto, MultipartFile image) {
 
         return shopRepository.findById(id).map(shop -> {
+            // --- MISE À JOUR DES CHAMPS ---
 
+            // 1. Mise à jour de tous les champs du DTO
             shop.setName(dto.getName());
-
             shop.setPhoneNumber(dto.getPhoneNumber());
             shop.setAddress(dto.getAddress());
             shop.setEmail(dto.getEmail());
             shop.setDescription(dto.getDescription());
-            shop.setUpdatedAt(LocalDateTime.now());
 
+            // 2. MISE À JOUR CRITIQUE : isActive (ne pas l'oublier!)
+            // Utilisez le setter pour isActive
+            if (dto.getIsActive() != null) {
+                shop.setIsActive(dto.getIsActive());
+            }
+
+            // 3. Gestion des dates
+            shop.setUpdatedAt(LocalDateTime.now()); // ✅ OK: Mise à jour de la date de modification
+
+            // 4. Gestion de l'image (Logique inchangée, semble correcte)
             if (image != null && !image.isEmpty()) {
                 String imageUrl = imageUploadService.uploadImage(
                         image,
@@ -86,7 +98,6 @@ public class ShopService {
 
         }).orElse(new ApiResponse<>("Boutique non trouvée", null, HttpStatus.NOT_FOUND.value()));
     }
-
     public ApiResponse<Void> deleteShop(Long id) {
         shopRepository.deleteById(id);
         return new ApiResponse<>("Boutique supprimée", null, HttpStatus.OK.value());
@@ -107,6 +118,31 @@ public class ShopService {
         return new ApiResponse<>("Liste des boutiques", dtoPage, HttpStatus.OK.value());
     }
 
+    public ApiResponse<Page<ShopResponseDTO>> getAllShopsPaginated(String search, Pageable pageable) {
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt") // tri du plus récent au plus ancien
+        );
+        Page<Shop> shopsPage;
+
+        if (search == null || search.trim().isEmpty()) {
+            shopsPage = shopRepository.findAll(sortedPageable);
+        } else {
+            shopsPage = shopRepository.searchShops(search.trim(), sortedPageable);
+        }
+
+        Page<ShopResponseDTO> dtoPage = shopsPage.map(this::convertToDto);
+
+        return new ApiResponse<>(
+                "Liste des boutiques",
+                dtoPage,
+                HttpStatus.OK.value()
+        );
+    }
+
+
     private ShopResponseDTO convertToDto(Shop shop) {
         ShopResponseDTO dto = new ShopResponseDTO();
         dto.setId(shop.getId());
@@ -115,6 +151,7 @@ public class ShopService {
         dto.setPhoneNumber(shop.getPhoneNumber());
         dto.setAddress(shop.getAddress());
         dto.setEmail(shop.getEmail());
+        dto.setCreatedAt(shop.getCreatedAt());
 
         // Génération du lien complet vers l'image
         if (shop.getImageUrl() != null) {

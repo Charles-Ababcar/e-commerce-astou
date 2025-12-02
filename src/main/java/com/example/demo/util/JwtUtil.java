@@ -42,17 +42,32 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
+
+
     public String generateToken(String username) {
-        return Jwts.builder().setSubject(username).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 5)) // 5 minutes
-                .signWith(key).compact();
+       long expirationMillis = 1000L * 60 * 60; // 1 heure
+        //long expirationMillis = 1000 * 60 * 5; //5minutes
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
+                .signWith(key)
+                .compact();
     }
 
+
     public String generateRefreshToken(String username) {
-        return Jwts.builder().setSubject(username).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7)) // 7 days
-                .signWith(key).compact();
+        long expirationMillis = 1000L * 60 * 60 * 24 * 30; // 30 jours
+
+        //long expirationMillis = 1000 * 60 * 60 * 24 * 7; // 7 jours
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
+                .signWith(key)
+                .compact();
     }
+
 
     public Boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);

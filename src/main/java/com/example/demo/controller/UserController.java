@@ -2,15 +2,14 @@ package com.example.demo.controller;
 
 import com.example.demo.config.CustomUserDetails;
 import com.example.demo.config.CustomUserDetailsService;
-import com.example.demo.dto.ApiResponse;
-import com.example.demo.dto.AuthResponse;
-import com.example.demo.dto.UserProfileDto;
-import com.example.demo.dto.UserResponseDTO;
+import com.example.demo.dto.*;
 import com.example.demo.dto.request.*;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -115,8 +114,12 @@ public class UserController {
         User user = userDetails.user();
 
         UserProfileDto profile = new UserProfileDto(
+                user.getId(),
                 user.getUsername(),
                 user.getEmail(),
+                user.getName(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
                 List.of(user.getRole().name())
         );
 
@@ -144,10 +147,12 @@ public class UserController {
     // GET ALL USERS
     // -----------------------
     @GetMapping("all")
-    public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getAllUsers() {
-        List<UserResponseDTO> users = userService.getAllUsers();
-        return ResponseEntity.ok(new ApiResponse<>("Liste des utilisateurs récupérée avec succès", users, HttpStatus.OK.value()));
+    public ApiResponse<Page<UserResponseDTO>> getAllUsers( @RequestParam(defaultValue = "") String search,
+                                                           Pageable pageable) {
+        return userService.getAllUsers(search ,pageable);
+
     }
+
 
     // -----------------------
     // DELETE USER

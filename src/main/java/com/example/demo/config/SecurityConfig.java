@@ -50,7 +50,13 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/uploads/**"
+                                "/uploads/**",
+                                "/api/products/all-frontend",
+                                "/api/products/by/{id}",
+                                "/api/carts/**",
+                                "/api/shops/list-frontend",
+                                "/api/orders/place",
+                                "/api/shops/by/{id}"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

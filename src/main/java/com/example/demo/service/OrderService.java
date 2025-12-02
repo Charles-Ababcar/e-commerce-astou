@@ -67,6 +67,9 @@ public class OrderService {
                     newClient.setName(placeOrderRequest.getClient().getName());
                     newClient.setEmail(placeOrderRequest.getClient().getEmail());
                     newClient.setAddress(placeOrderRequest.getClient().getAddress());
+                    newClient.setPhoneNumber(placeOrderRequest.getClient().getPhoneNumber());
+                    newClient.setCreatedAt(placeOrderRequest.getClient().getCreatedAt());
+                    newClient.setUpdatedAt(placeOrderRequest.getClient().getUpdatedAt());
                     return clientRepository.save(newClient);
                 });
 

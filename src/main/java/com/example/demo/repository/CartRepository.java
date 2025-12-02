@@ -16,5 +16,6 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
 
     long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<Cart> findByUserIdIsNull();
 
 }

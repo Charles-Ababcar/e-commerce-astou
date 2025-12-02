@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 
@@ -29,20 +30,37 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // ------------------------------------------
     @Query(value = "SELECT p.* FROM product p " +
             "JOIN order_item oi ON p.id = oi.product_id " +
-            "JOIN \"order\" o ON oi.order_id = o.id " +
-            "WHERE (:startDate IS NULL OR o.created_at >= :startDate) " +
-            "AND (:endDate IS NULL OR o.created_at <= :endDate) " +
+            "JOIN orders o ON oi.order_id = o.id " +
+            "WHERE (CAST(:startDate AS timestamp) IS NULL OR o.created_at >= CAST(:startDate AS timestamp)) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR o.created_at <= CAST(:endDate AS timestamp)) " +
             "GROUP BY p.id " +
             "ORDER BY SUM(oi.quantity) DESC",
             countQuery = "SELECT count(*) FROM (SELECT p.id FROM product p " +
                     "JOIN order_item oi ON p.id = oi.product_id " +
-                    "JOIN \"order\" o ON oi.order_id = o.id " +
-                    "WHERE (:startDate IS NULL OR o.created_at >= :startDate) " +
-                    "AND (:endDate IS NULL OR o.created_at <= :endDate) " +
+                    "JOIN orders o ON oi.order_id = o.id " +
+                    "WHERE (CAST(:startDate AS timestamp) IS NULL OR o.created_at >= CAST(:startDate AS timestamp)) " +
+                    "AND (CAST(:endDate AS timestamp) IS NULL OR o.created_at <= CAST(:endDate AS timestamp)) " +
                     "GROUP BY p.id) as top_prod",
             nativeQuery = true)
     Page<Product> findTopSellingProducts(
             LocalDateTime startDate,
             LocalDateTime endDate,
             Pageable pageable);
+
+
+    @Query("SELECT p FROM Product p WHERE p.shop.id = :shopId AND " +
+            "(LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Product> searchByShopId(@Param("shopId") Long shopId,
+                                 @Param("search") String search,
+                                 Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE " +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Product> searchProducts(@Param("search") String search,
+                                 Pageable pageable);
+
+
+
 }

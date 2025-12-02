@@ -1,20 +1,25 @@
 package com.example.demo.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
+@Setter
+@Getter
+@Data
+@AllArgsConstructor
 public class UserProfileDto {
+    private Long id;
     private String username;
-    private String email; // si tu as un champ email
+    private String email;
+   private String name;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private List<String> roles;
 
-    public UserProfileDto(String username, String email, List<String> roles) {
-        this.username = username;
-        this.email = email;
-        this.roles = roles;
-    }
-
-    // getters et setters
-    public String getUsername() { return username; }
-    public String getEmail() { return email; }
-    public List<String> getRoles() { return roles; }
 }
+

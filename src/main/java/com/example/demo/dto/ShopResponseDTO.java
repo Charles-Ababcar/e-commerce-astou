@@ -2,6 +2,8 @@ package com.example.demo.dto;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class ShopResponseDTO {
 
@@ -13,4 +15,8 @@ public class ShopResponseDTO {
     private String email;
     private String imageUrl;
     private Boolean isActive;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+
 }

@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,8 +17,12 @@ public class CartItem {
 
     private int quantity;
 
+    private int totalCents; // prix * quantité
+
+
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
+    @JsonBackReference
     private Cart cart;
 
     @ManyToOne

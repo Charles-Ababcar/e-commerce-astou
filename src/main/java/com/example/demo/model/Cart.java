@@ -1,5 +1,7 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +20,8 @@ public class Cart {
 
     private boolean ordered;
 
+    private int totalPriceCents;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -27,12 +31,16 @@ public class Cart {
     private Shop shop;
 
     @Column(name = "created_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
+
     @OneToMany(mappedBy = "cart")
+    @JsonManagedReference
     private List<CartItem> items;
 
 }

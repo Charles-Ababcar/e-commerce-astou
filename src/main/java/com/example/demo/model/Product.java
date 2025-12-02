@@ -1,10 +1,15 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 public class Product {
 
     @Id
@@ -22,16 +27,8 @@ public class Product {
 
     private int stock;
 
-    private boolean isActive = true;
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public void setActive(boolean active) {
-        isActive = active;
-    }
-
+    @Column(nullable = false)
+    private Boolean isActive = true;
 
 
     @Column(name = "created_at")
@@ -57,102 +54,4 @@ public class Product {
     private Category category;
 
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public int getPriceCents() {
-        return priceCents;
-    }
-
-    public void setPriceCents(int priceCents) {
-        this.priceCents = priceCents;
-    }
-
-    public int getStock() {
-        return stock;
-    }
-
-    public void setStock(int stock) {
-        this.stock = stock;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Shop getShop() {
-        return shop;
-    }
-
-    public void setShop(Shop shop) {
-        this.shop = shop;
-    }
-
-
-
-    public List<CartItem> getCartItems() {
-        return cartItems;
-    }
-
-    public void setCartItems(List<CartItem> cartItems) {
-        this.cartItems = cartItems;
-    }
-
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
-
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
 }

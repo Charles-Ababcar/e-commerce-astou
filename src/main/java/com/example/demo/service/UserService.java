@@ -1,12 +1,17 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ApiResponse;
+import com.example.demo.dto.ShopResponseDTO;
 import com.example.demo.dto.request.UserRegisterDTO;
 import com.example.demo.dto.request.UserRequestDTO;
 import com.example.demo.dto.UserResponseDTO;
+import com.example.demo.model.Shop;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,6 +49,8 @@ public class UserService {
             user.setName(dto.getName());
             user.setUsername(dto.getUsername());
             user.setEmail(dto.getEmail());
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdatedAt(LocalDateTime.now());
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
             user.setRole(role);
             user.setCreatedAt(LocalDateTime.now());
@@ -69,7 +76,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole(User.Role.USER);
         user.setCreatedAt(LocalDateTime.now());
-
+        user.setUpdatedAt(LocalDateTime.now());
         return convertToDto(userRepository.save(user));
     }
 
@@ -102,13 +109,45 @@ public class UserService {
     /**
      * Récupérer tous les utilisateurs
      */
-    public List<UserResponseDTO> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        if (users.isEmpty()) {
-            throw new RuntimeException("Aucun utilisateur trouvé");
+    public ApiResponse<Page<UserResponseDTO>> getAllUsers(String search, Pageable pageable) {
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        Page<User> usersPage;
+
+        if (search == null || search.trim().isEmpty()) {
+            usersPage = userRepository.findAll(sortedPageable);
+        } else {
+            usersPage = userRepository.searchUsers(search.trim(), sortedPageable);
         }
-        return users.stream().map(this::convertToDto).collect(Collectors.toList());
+
+        // 🔥 Filtrer ici (avant le mapping)
+        List<User> filtered =
+                usersPage.getContent().stream()
+                        .filter(user -> user.getRole() != User.Role.SUPER_ADMIN) // 👈 CORRECT
+                        .toList();
+
+        // 🔥 Recréer une PAGE manuellement
+        Page<User> filteredPage = new PageImpl<>(
+                filtered,
+                sortedPageable,
+                filtered.size()
+        );
+
+        Page<UserResponseDTO> dtoPage =
+                filteredPage.map(this::convertToDto);
+
+        return new ApiResponse<>(
+                "Liste des utilisateurs récupérée avec succès",
+                dtoPage,
+                HttpStatus.OK.value()
+        );
     }
+
 
     /**
      * Récupérer un utilisateur par ID

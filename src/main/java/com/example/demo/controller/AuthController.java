@@ -50,9 +50,13 @@ public class AuthController {
         User user = userDetails.user();
 
         UserProfileDto profile = new UserProfileDto(
+                user.getId(),
                 user.getUsername(),
-                user.getEmail(), // si tu ajoutes email dans User
-                List.of(user.getRole().name()) // ton rôle enum
+                user.getEmail(),
+                user.getName(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                List.of(user.getRole().name())
         );
 
         return ResponseEntity.ok(profile);
