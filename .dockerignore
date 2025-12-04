@@ -3,3 +3,5 @@
 .idea
 target/
 !target/*.jar
+# Ignorer le fichier local
+src/main/resources/application.properties
