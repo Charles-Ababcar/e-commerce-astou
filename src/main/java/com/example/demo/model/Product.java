@@ -11,7 +11,6 @@ import java.util.List;
 @Getter
 @Setter
 public class Product {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,13 +26,11 @@ public class Product {
 
     private int stock;
 
-    // ⭐️ AJOUTER LE CHAMP RATING ICI
     @Column(name = "average_rating")
-    private Double rating = 0.0; // Initialisé à 0.0 ou null
+    private Double rating = 0.0;
 
     @Column(nullable = false)
     private Boolean isActive = true;
-
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -45,17 +42,25 @@ public class Product {
     @JoinColumn(name = "shop_id", nullable = false)
     private Shop shop;
 
-
     @OneToMany(mappedBy = "product")
     private List<CartItem> cartItems;
 
     @OneToMany(mappedBy = "product")
     private List<OrderItem> orderItems;
 
-
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        if (this.updatedAt == null) this.updatedAt = LocalDateTime.now();
+    }
 
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
+
