@@ -9,7 +9,7 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-
+RUN mvn clean package -Dmaven.test.skip=true -Dproject.build.sourceEncoding=UTF-8
 # Exposer le port de Spring Boot
 EXPOSE 8080
 
