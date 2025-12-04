@@ -56,7 +56,11 @@ public class SecurityConfig {
                                 "/api/carts/**",
                                 "/api/shops/list-frontend",
                                 "/api/orders/place",
-                                "/api/shops/by/{id}"
+                                "/api/shops/by/{id}",
+                                "/api/products/shop/{shopId}",
+                                "/api/categories/all",
+                                "/api/orders/{id}",
+                                "/api/orders/get/{id}"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

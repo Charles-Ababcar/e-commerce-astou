@@ -37,7 +37,6 @@ public class ShopService {
         shop.setEmail(dto.getEmail());
         shop.setDescription(dto.getDescription());
 
-        // 👉 isActive = true par défaut
         shop.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
 
         shop.setCreatedAt(LocalDateTime.now());

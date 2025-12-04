@@ -22,6 +22,8 @@ public class Order {
 
     private String status;
 
+    private String orderNumber;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

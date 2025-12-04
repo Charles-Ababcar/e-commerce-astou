@@ -27,6 +27,10 @@ public class Product {
 
     private int stock;
 
+    // ⭐️ AJOUTER LE CHAMP RATING ICI
+    @Column(name = "average_rating")
+    private Double rating = 0.0; // Initialisé à 0.0 ou null
+
     @Column(nullable = false)
     private Boolean isActive = true;
 

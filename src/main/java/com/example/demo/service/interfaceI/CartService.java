@@ -14,6 +14,8 @@ public interface CartService {
 
     ApiResponse<CartDTO> createCart(CreateCartRequestDTO dto);
 
+    ApiResponse<CartDTO> createEmptyCart();
+
     ApiResponse<CartDTO> addItemToCart(Long cartId, AddItemRequest request);
 
     public ApiResponse<CartDTO> getCartById(Long cartId);
@@ -22,4 +24,6 @@ public interface CartService {
     ApiResponse<CartDTO> updateCartItem(Long cartId, Long itemId, UpdateItemRequest request);
 
     ApiResponse<CartDTO> removeCartItem(Long cartId, Long itemId);
+
+    ApiResponse<CartDTO> clearCart(Long cartId);
 }

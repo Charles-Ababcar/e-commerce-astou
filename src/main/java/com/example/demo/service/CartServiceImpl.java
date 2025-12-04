@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.*;
 import com.example.demo.dto.request.*;
+import com.example.demo.dto.request.ShopDTO;
 import com.example.demo.model.Cart;
 import com.example.demo.model.CartItem;
 import com.example.demo.model.Product;
@@ -145,6 +146,25 @@ public class CartServiceImpl implements CartService {
         return new ApiResponse<>("Panier créé et produit ajouté", cartDTO, HttpStatus.CREATED.value());
     }
 
+
+    @Override
+    public ApiResponse<CartDTO> createEmptyCart() {
+        Cart cart = new Cart();
+        cart.setCreatedAt(LocalDateTime.now());
+        cart.setTotalPriceCents(0);
+        cart = cartRepository.save(cart);
+
+        // Mapping DTO minimal
+        CartDTO cartDTO = new CartDTO();
+        cartDTO.setId(cart.getId());
+        cartDTO.setOrdered(cart.isOrdered());
+        cartDTO.setCreatedAt(cart.getCreatedAt().toString());
+        cartDTO.setUpdatedAt(cart.getUpdatedAt().toString());
+        cartDTO.setTotalPriceCents(0);
+        cartDTO.setItems(List.of()); // La liste est vide
+
+        return new ApiResponse<>("Panier vide créé", cartDTO, HttpStatus.CREATED.value());
+    }
 
     /** Ajouter un produit dans un panier existant */
     @Override
@@ -298,10 +318,11 @@ public class CartServiceImpl implements CartService {
         Cart cart = item.getCart();
         cartItemRepository.delete(item);
 
-        // Recalculer totalPriceCents après suppression
+        // Recalculer totalPriceCents après suppression (utilise la liste mise à jour par JPA)
         cart.setTotalPriceCents(cart.getItems().stream()
                 .mapToInt(i -> i.getQuantity() * i.getProduct().getPriceCents())
                 .sum());
+
         cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);
 
@@ -352,6 +373,40 @@ public class CartServiceImpl implements CartService {
         }).collect(Collectors.toList()));
 
         return new ApiResponse<>("Article supprimé", cartDTO, HttpStatus.OK.value());
+    }
+
+
+    @Override
+    public ApiResponse<CartDTO> clearCart(Long cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Panier non trouvé"));
+
+        // ÉTAPE CRUCIALE POUR SUPPRIMER DÉFINITIVEMENT LE PANIER:
+
+        // 2. Supprimer l'entité Cart.
+        // Grâce à 'cascade = CascadeType.ALL' et 'orphanRemoval = true' sur la liste 'items'
+        // dans l'entité Cart, JPA/Hibernate va automatiquement:
+        // a) Supprimer tous les CartItem liés.
+        // b) Supprimer l'entité Cart elle-même.
+        cartRepository.delete(cart);
+
+        // 3. RETOURNER la réponse.
+        // Nous ne pouvons plus manipuler l'objet 'cart' ni le sauvegarder (save)
+        // car il est maintenant supprimé de la base de données.
+
+        // Un statut 204 No Content (pas de corps) est idéal pour une suppression,
+        // mais si l'API exige un corps, retournez un CartDTO vide.
+
+        // Retour d'une réponse de succès sans données spécifiques
+        // HttpStatus.NO_CONTENT.value() est 204, mais on retourne 200/OK pour garder le DTO.
+        CartDTO emptyCartDTO = new CartDTO();
+        emptyCartDTO.setItems(List.of());
+        emptyCartDTO.setTotalPriceCents(0);
+
+        // Notez que l'ID n'est pas inclus car l'entité a été détruite.
+
+        return new ApiResponse<>("Panier supprimé et contenu vidé", emptyCartDTO, HttpStatus.OK.value());
+
     }
 
 }

@@ -45,6 +45,14 @@ public class CartController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    // L'ancienne méthode est conservée pour l'initialisation AVEC produit
+    // Vous pouvez la renommer si vous le souhaitez pour plus de clarté
+    @PostMapping("/with-item") // Renommage suggéré pour clarté, ou utilisez-la pour l'ajout
+    public ResponseEntity<ApiResponse<CartDTO>> createCartWithItem(@RequestBody CreateCartRequestDTO dto) {
+        ApiResponse<CartDTO> response = cartService.createCart(dto);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
     /**
      * Ajouter un article dans un panier existant
      */
@@ -55,6 +63,8 @@ public class CartController {
         ApiResponse<CartDTO> response = cartService.addItemToCart(cartId, request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+
 
     /**
      * Modifier la quantité d’un article dans le panier
@@ -78,6 +88,23 @@ public class CartController {
             @PathVariable Long itemId) {
 
         ApiResponse<CartDTO> response = cartService.removeCartItem(cartId, itemId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    /**
+     * Supprime tous les CartItem associés à un panier spécifique.
+     * URI: DELETE /api/carts/{cartId}/clear
+     */
+    @DeleteMapping("/{cartId}/clear")
+    public ResponseEntity<ApiResponse<CartDTO>> clearCart(
+            @PathVariable Long cartId) {
+
+        ApiResponse<CartDTO> response = cartService.clearCart(cartId);
+
+        // La méthode clearCart renvoie le panier mis à jour (vide)
+        // et le statut OK (200) ou NO_CONTENT (204) pourrait être utilisé
+        // Ici, nous conservons le statut 200 pour renvoyer le corps de réponse.
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

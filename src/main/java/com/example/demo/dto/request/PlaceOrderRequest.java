@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 public class PlaceOrderRequest {
 
-    // Getters and Setters
+    private Long cartId;
     private Client client;
     private List<OrderItemRequest> orderItems;
 

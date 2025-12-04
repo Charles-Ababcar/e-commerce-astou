@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.PageResponse;
+import com.example.demo.dto.request.*;
 import com.example.demo.model.Order;
 import com.example.demo.model.Product;
 import com.example.demo.model.User;
@@ -14,12 +15,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")
 @PreAuthorize("hasAnyRole('ADMIN' , 'SUPER_ADMIN')")
 public class DashboardController {
+
 
     @Autowired
     private DashboardService dashboardService;
@@ -28,7 +31,7 @@ public class DashboardController {
     // Statistiques générales
     // -------------------------
     @GetMapping("/general")
-    public ApiResponse<Map<String, Object>> getGeneralStatistics(
+    public ApiResponse<DashboardStatsDTO> getGeneralStatistics(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return dashboardService.getGeneralStatistics(startDate, endDate);
@@ -38,7 +41,7 @@ public class DashboardController {
     // Tendances de ventes
     // -------------------------
     @GetMapping("/sales/trends")
-    public ApiResponse<Map<String, Object>> getSalesTrends(
+    public ApiResponse<List<SalesTrendDTO>> getSalesTrends(
             @RequestParam String type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -49,41 +52,32 @@ public class DashboardController {
     // Produits les plus vendus
     // -------------------------
     @GetMapping("/products/top")
-    public ApiResponse<PageResponse<Product>> getTopSellingProducts(
+    public ApiResponse<PageResponse<TopProductDTO>> getTopSellingProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
-        Page<Product> topProductsPage = dashboardService.getTopSellingProducts(page, size, startDate, endDate);
-        PageResponse<Product> pageResponse = new PageResponse<>(topProductsPage);
-        return new ApiResponse<>("Top produits vendus", pageResponse, HttpStatus.OK.value());
+        return dashboardService.getTopSellingProducts(page, size, startDate, endDate);
     }
 
     // -------------------------
     // Commandes récentes
     // -------------------------
     @GetMapping("/orders/recent")
-    public ApiResponse<PageResponse<Order>> getRecentOrders(
+    public ApiResponse<PageResponse<RecentOrderDTO>> getRecentOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-
-        Page<Order> recentOrdersPage = dashboardService.getRecentOrders(page, size);
-        PageResponse<Order> pageResponse = new PageResponse<>(recentOrdersPage);
-        return new ApiResponse<>("Commandes récentes", pageResponse, HttpStatus.OK.value());
+        return dashboardService.getRecentOrders(page, size);
     }
 
     // -------------------------
     // Clients récents
     // -------------------------
     @GetMapping("/customers/recent")
-    public ApiResponse<PageResponse<User>> getRecentCustomers(
+    public ApiResponse<PageResponse<RecentCustomerDTO>> getRecentCustomers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-
-        Page<User> recentCustomersPage = dashboardService.getRecentCustomers(page, size);
-        PageResponse<User> pageResponse = new PageResponse<>(recentCustomersPage);
-        return new ApiResponse<>("Clients récents", pageResponse, HttpStatus.OK.value());
+        return dashboardService.getRecentCustomers(page, size);
     }
 
     // -------------------------
@@ -101,7 +95,6 @@ public class DashboardController {
     public ApiResponse<Map<String, Object>> getAbandonedCartsRate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
         return dashboardService.getAbandonedCartsRate(startDate, endDate);
     }
 
@@ -112,7 +105,6 @@ public class DashboardController {
     public ApiResponse<Map<String, Object>> getConversionRate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
         return dashboardService.getConversionRate(startDate, endDate);
     }
 
@@ -125,7 +117,6 @@ public class DashboardController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate currentEnd,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate previousStart,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate previousEnd) {
-
         return dashboardService.getPerformanceComparison(currentStart, currentEnd, previousStart, previousEnd);
     }
 }

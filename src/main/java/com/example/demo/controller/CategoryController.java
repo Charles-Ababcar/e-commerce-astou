@@ -56,4 +56,9 @@ public class CategoryController {
     public ApiResponse<Page<CategoryResponseDTO>> getAll(  @RequestParam(defaultValue = "") String search,Pageable pageable) {
         return categoryService.getAll(search,pageable);
     }
+    @GetMapping("all")
+    public ApiResponse<Page<CategoryResponseDTO>> getAllByFrontend(  @RequestParam(defaultValue = "") String search,Pageable pageable) {
+        return categoryService.getAll(search,pageable);
+    }
+
 }

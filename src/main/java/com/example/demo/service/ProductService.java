@@ -187,6 +187,19 @@ public class ProductService {
     }
 
 
+    public Page<ProductResponseDTO> getProductsByShopId(Long shopId, Pageable pageable) {
+
+        // 1. Récupère la page d'entités Product en utilisant l'ID de la boutique
+        Page<Product> productsPage = productRepository.findByShopId(shopId, pageable);
+
+        // 2. Mappe la Page<Product> en Page<ProductResponseDTO>
+        return productsPage.map(this::convertToDto);
+
+        // Note: Si le shopId est invalide, cette méthode retournera une page vide (ce qui est acceptable).
+        // Si vous voulez retourner un 404 explicite si la boutique n'existe pas, vous devez
+        // injecter et vérifier ShopRepository ici.
+    }
+
 
     // Dans ProductService (ou un utilitaire de conversion)
 
@@ -246,5 +259,6 @@ public class ProductService {
 
         return dto;
     }
+
 }
 

@@ -19,4 +19,6 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
 """)
     Page<Shop> searchShops(@Param("search") String search, Pageable pageable);
 
+
+
 }

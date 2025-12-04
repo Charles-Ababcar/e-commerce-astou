@@ -92,4 +92,20 @@ public class ProductController {
     public ApiResponse<Void> delete(@PathVariable Long id) {
         return productService.deleteProduct(id);
     }
+
+
+    /**
+     * GET /api/products/shop/{shopId}
+     * Récupère tous les produits d'une boutique spécifique avec pagination.
+     */
+    @GetMapping("/shop/{shopId}")
+    public ResponseEntity<PageResponse<ProductResponseDTO>> getProductsByShopId(
+            @PathVariable Long shopId,
+            Pageable pageable) {
+
+        Page<ProductResponseDTO> productsPage = productService.getProductsByShopId(shopId, pageable);
+
+        // Utilise PageResponse pour encapsuler la page et ses métadonnées
+        return ResponseEntity.ok(new PageResponse<>(productsPage));
+    }
 }

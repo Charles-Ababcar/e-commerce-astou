@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -27,4 +28,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
        OR LOWER(s.role) LIKE LOWER(CONCAT('%', :search, '%'))
 """)
     Page<User> searchUsers(@Param("search") String search, Pageable pageable);
+
+
+    // Trouver un utilisateur par email
+    Optional<User> findByEmail(String email);
+
+    // Trouver les utilisateurs par rôle
+    Page<User> findByRole(String role, Pageable pageable);
+
+
+    // Compter les utilisateurs créés après une certaine date
+    long countByCreatedAtAfter(LocalDateTime date);
+
+    // Chercher par nom ou email
+    @Query("SELECT u FROM User u WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<User> searchByNameOrEmail(@Param("query") String query, Pageable pageable);
 }

@@ -1,26 +1,30 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.ApiResponse;
-import com.example.demo.dto.OrderItemResponseDTO;
+import com.example.demo.dto.*;
 import com.example.demo.dto.request.OrderItemRequest;
 import com.example.demo.dto.request.PlaceOrderRequest;
+import com.example.demo.dto.request.ProductResponseDTO;
 import com.example.demo.model.*;
-import com.example.demo.repository.ClientRepository;
-import com.example.demo.repository.OrderRepository;
-import com.example.demo.repository.ProductRepository;
+import com.example.demo.repository.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class OrderService {
 
@@ -33,45 +37,92 @@ public class OrderService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
+
+    // Dans OrderService.java
+    @Autowired
+    private CartRepository cartRepository;
+
     /**
-     * Récupère toutes les commandes avec pagination
+     * Récupère toutes les commandes avec pagination et mapping DTO
      */
-    public Page<Order> getAllOrders(Pageable pageable) {
-        return orderRepository.findAll(pageable);
+    public Page<OrderDTO> getAllOrdersDTO(String search, Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt") // tri du plus récent au plus ancien
+        );
+
+        Page<Order> page;
+
+        if (search != null && !search.isEmpty()) {
+            page = orderRepository.searchOrder(search, sortedPageable);
+
+        }  else {
+            page = orderRepository.findAll(sortedPageable);
+        }
+
+        // Mappez la Page<Order> en Page<OrderDTO>
+        return page.map(this::convertToOrderDto);
     }
+
+
 
     /**
      * Récupère une commande par son ID
      */
-    public ApiResponse<List<OrderItemResponseDTO>> getOrderById(Long id) {
-        Optional<Order> order = orderRepository.findById(id);
-        if (order.isEmpty()) {
+    public ApiResponse<OrderDTO> getOrderDtoById(Long id) {
+        Optional<Order> orderOpt = orderRepository.findById(id);
+
+        if (orderOpt.isEmpty()) {
             return new ApiResponse<>("Commande non trouvée avec l'identifiant " + id, null, HttpStatus.NOT_FOUND.value());
         }
 
-        List<OrderItemResponseDTO> itemsDto = order.get().getItems().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        Order order = orderOpt.get();
 
-        return new ApiResponse<>("Commande récupérée avec succès", itemsDto, HttpStatus.OK.value());
+        // Utiliser la méthode de conversion Order -> OrderDTO
+        OrderDTO orderDto = convertToOrderDto(order);
+
+        return new ApiResponse<>("Commande récupérée avec succès", orderDto, HttpStatus.OK.value());
     }
 
     /**
      * Passe une commande
      */
-    public ApiResponse<List<OrderItemResponseDTO>> placeOrder(PlaceOrderRequest placeOrderRequest) {
-        // Vérifie ou crée le client
+    public ApiResponse<OrderPlacedResponseDTO> placeOrder(PlaceOrderRequest placeOrderRequest) {
+
+        log.info("==============================================================");
+        log.info("🚀 [placeOrder] DÉBUT DU TRAITEMENT");
+        log.info("==============================================================");
+
+        // -------------------------
+        // 1️⃣ CLIENT
+        // -------------------------
+        log.info("👤 Vérification du client : {}", placeOrderRequest.getClient().getEmail());
+
         Client client = clientRepository.findByEmail(placeOrderRequest.getClient().getEmail())
                 .orElseGet(() -> {
-                    Client newClient = new Client();
-                    newClient.setName(placeOrderRequest.getClient().getName());
-                    newClient.setEmail(placeOrderRequest.getClient().getEmail());
-                    newClient.setAddress(placeOrderRequest.getClient().getAddress());
-                    newClient.setPhoneNumber(placeOrderRequest.getClient().getPhoneNumber());
-                    newClient.setCreatedAt(placeOrderRequest.getClient().getCreatedAt());
-                    newClient.setUpdatedAt(placeOrderRequest.getClient().getUpdatedAt());
-                    return clientRepository.save(newClient);
+                    log.warn("➕ Client inexistant → création...");
+                    Client c = new Client();
+                    c.setName(placeOrderRequest.getClient().getName());
+                    c.setEmail(placeOrderRequest.getClient().getEmail());
+                    c.setAddress(placeOrderRequest.getClient().getAddress());
+                    c.setPhoneNumber(placeOrderRequest.getClient().getPhoneNumber());
+                    c.setCreatedAt(LocalDateTime.now());
+                    c.setUpdatedAt(LocalDateTime.now());
+                    log.info("📌 Nouveau client créé : {}", c.getEmail());
+                    return clientRepository.save(c);
                 });
+
+        log.info("✅ Client OK → ID: {}", client.getId());
+
+
+        // -------------------------
+        // 2️⃣ COMMANDE
+        // -------------------------
+        log.info("📦 Vérification du stock des produits...");
 
         Order order = new Order();
         order.setClient(client);
@@ -82,57 +133,128 @@ public class OrderService {
         List<OrderItem> orderItems = new ArrayList<>();
         long total = 0;
 
-        // Validation des produits et du stock
         for (OrderItemRequest itemDto : placeOrderRequest.getOrderItems()) {
-            Optional<Product> productOpt = productRepository.findById(itemDto.getProductId());
-            if (productOpt.isEmpty()) {
-                return new ApiResponse<>("Produit non trouvé avec l'identifiant : " + itemDto.getProductId(),
-                        null, HttpStatus.BAD_REQUEST.value());
+
+            Product product = productRepository.findById(itemDto.getProductId())
+                    .orElse(null);
+
+            if (product == null) {
+                log.error("❌ Produit introuvable : {}", itemDto.getProductId());
+                return new ApiResponse<>("Produit introuvable", null, 400);
             }
-            Product product = productOpt.get();
+
+            log.info("🧩 {} | Stock: {} | Demandé: {}",
+                    product.getName(),
+                    product.getStock(),
+                    itemDto.getQuantity());
 
             if (product.getStock() < itemDto.getQuantity()) {
-                return new ApiResponse<>(
-                        "Stock insuffisant pour le produit : " + product.getName() +
-                                ". Demandé : " + itemDto.getQuantity() + ", Disponible : " + product.getStock(),
-                        null,
-                        HttpStatus.BAD_REQUEST.value());
+                log.error("❌ Stock INSUFFISANT pour {}", product.getName());
+                return new ApiResponse<>("Stock insuffisant", null, 400);
             }
         }
 
-        // Création des OrderItems et mise à jour du stock
+        // -------------------------
+        // 3️⃣ CRÉATION DES ITEMS
+        // -------------------------
+        log.info("🛠️ Création des OrderItems + MàJ du stock...");
+
         for (OrderItemRequest itemDto : placeOrderRequest.getOrderItems()) {
+
             Product product = productRepository.findById(itemDto.getProductId()).get();
 
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setProduct(product);
-            orderItem.setQuantity(itemDto.getQuantity());
-            orderItem.setPriceCents(product.getPriceCents());
-            orderItems.add(orderItem);
+            OrderItem item = new OrderItem();
+            item.setOrder(order);
+            item.setProduct(product);
+            item.setQuantity(itemDto.getQuantity());
+            item.setPriceCents(product.getPriceCents());
+            orderItems.add(item);
 
-            total += (long) product.getPriceCents() * itemDto.getQuantity();
+            long lineTotal = (long) product.getPriceCents() * itemDto.getQuantity();
+            total += lineTotal;
 
-            // Met à jour le stock
+            log.debug("   → Item: {} | Qty: {} | Prix: {} | Total ligne: {}",
+                    product.getName(),
+                    itemDto.getQuantity(),
+                    product.getPriceCents(),
+                    lineTotal);
+
             product.setStock(product.getStock() - itemDto.getQuantity());
             productRepository.save(product);
 
-            // Assigne la boutique de la commande depuis le produit
             order.setShop(product.getShop());
         }
 
-        order.setTotalCents(total);
         order.setItems(orderItems);
+        order.setTotalCents(total);
 
+        // -------------------------
+        // 4️⃣ SAUVEGARDE + NUMÉRO DE COMMANDE
+        // -------------------------
         Order savedOrder = orderRepository.save(order);
 
-        // Conversion en DTO avec catégorie et image
-        List<OrderItemResponseDTO> itemsDto = savedOrder.getItems().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        String datePart = savedOrder.getCreatedAt()
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        return new ApiResponse<>("Commande passée avec succès", itemsDto, HttpStatus.CREATED.value());
+        String orderNumber = "CMD-" + datePart + "-" + savedOrder.getId();
+        savedOrder.setOrderNumber(orderNumber);
+        orderRepository.save(savedOrder);
+
+        log.info("🧾 Commande créée → Numéro: {}", orderNumber);
+
+
+        // -------------------------
+        // 5️⃣ SUPPRESSION DU PANIER
+        // -------------------------
+        log.info("====== 🔍 DÉBUT SUPPRESSION PANIER ======");
+
+        Long cartId = placeOrderRequest.getCartId();
+
+        if (cartId != null) {
+
+            cartRepository.findById(cartId).ifPresentOrElse(cart -> {
+                log.info("🛒 Panier trouvé → ID: {}", cart.getId());
+                try {
+                    cartRepository.delete(cart);
+                    log.info("✅ Panier et items supprimés via cascade.");
+                } catch (Exception e) {
+                    log.error("❌ ERREUR LORS DE LA SUPPRESSION DU PANIER : {}", e.getMessage());
+                }
+            }, () -> {
+                log.warn("⚠️ Aucun panier trouvé avec l'ID : {}", cartId);
+            });
+        } else {
+            log.warn("⚠️ CartId reçu : NULL");
+        }
+
+        log.info("====== 🏁 FIN SUPPRESSION PANIER ======");
+
+
+        // -------------------------
+        // 6️⃣ RÉPONSE
+        // -------------------------
+        OrderPlacedResponseDTO dto = new OrderPlacedResponseDTO();
+        dto.setOrderId(savedOrder.getId());
+        dto.setOrderNumber(savedOrder.getOrderNumber());
+        dto.setTotalCents(savedOrder.getTotalCents());
+        dto.setStatus(savedOrder.getStatus());
+        dto.setItems(savedOrder.getItems().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList()));
+
+        log.info("🎉 Commande terminée avec succès !");
+        log.info("==============================================================");
+        log.info("✅ [placeOrder] FIN DU TRAITEMENT");
+        log.info("==============================================================");
+
+        return new ApiResponse<>(
+                "Commande " + orderNumber + " passée avec succès",
+                dto,
+                HttpStatus.CREATED.value()
+        );
     }
+
+
 
     /**
      * Supprime une commande
@@ -143,6 +265,47 @@ public class OrderService {
         }
         orderRepository.deleteById(orderId);
         return new ApiResponse<>("Commande supprimée avec succès", null, HttpStatus.OK.value());
+    }
+
+
+    @Transactional
+    public ApiResponse<OrderDTO> cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Commande non trouvée avec l'ID: " + orderId));
+
+        // 1. Validation du statut : ne peut annuler que si la commande n'est pas déjà finalisée (ex: DELIVERED ou CANCELLED)
+        if (order.getStatus().equals("CANCELLED") || order.getStatus().equals("DELIVERED")) {
+            return new ApiResponse<>(
+                    "Impossible d'annuler. Statut actuel: " + order.getStatus(),
+                    convertToOrderDto(order),
+                    HttpStatus.BAD_REQUEST.value()
+            );
+        }
+
+        // 2. Mise à jour du Stock (Reversement)
+        for (OrderItem item : order.getItems()) {
+            Product product = item.getProduct();
+
+            // ⚠️ Mise à jour du stock : On ajoute la quantité de l'article annulé.
+            product.setStock(product.getStock() + item.getQuantity());
+
+            // Sauvegarde immédiate de l'entité Product
+            productRepository.save(product);
+        }
+
+        // 3. Mise à jour du statut de la commande
+        order.setStatus("CANCELLED");
+        order.setUpdatedAt(LocalDateTime.now());
+        Order cancelledOrder = orderRepository.save(order);
+
+        // 4. Mapping et Retour DTO
+        OrderDTO orderDto = convertToOrderDto(cancelledOrder);
+
+        return new ApiResponse<>(
+                "Commande annulée et stock mis à jour avec succès",
+                orderDto,
+                HttpStatus.OK.value()
+        );
     }
 
     /**
@@ -174,4 +337,64 @@ public class OrderService {
 
         return dto;
     }
+
+    /**
+     * Convertit une entité Order en OrderDTO
+     */
+    private OrderDTO convertToOrderDto(Order order) {
+        OrderDTO dto = new OrderDTO();
+        dto.setId(order.getId());
+        dto.setTotalCents(order.getTotalCents());
+        dto.setOrderNumber(order.getOrderNumber());
+        dto.setStatus(order.getStatus());
+        dto.setCreatedAt(order.getCreatedAt());
+        dto.setUpdatedAt(order.getUpdatedAt());
+
+        // Mapping des items
+        List<OrderItemResponseDTO> itemsDto = order.getItems().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        // 🚨 Correction : Assignation de la liste des items
+        dto.setItems(itemsDto);
+
+        // Mapping Client et Shop
+        dto.setClient(convertToClientDto(order.getClient()));
+        dto.setShop(convertToShopDto(order.getShop()));
+
+        return dto;
+    }
+
+
+    /**
+     * Convertit une entité Client en ClientDTO
+     */
+    private ClientDTO convertToClientDto(Client client) {
+        if (client == null) {
+            return null;
+        }
+        return new ClientDTO(
+                client.getId(),
+                client.getName(),
+                client.getEmail(),
+                client.getAddress(),
+                client.getPhoneNumber(),
+                client.getCreatedAt(),
+                client.getUpdatedAt()
+        );
+    }
+
+    /**
+     * Convertit une entité Shop en ShopDTO
+     */
+    private ShopDTO convertToShopDto(Shop shop) {
+        if (shop == null) {
+            return null;
+        }
+        return new ShopDTO(
+                shop.getId(),
+                shop.getName()
+        );
+    }
+
 }

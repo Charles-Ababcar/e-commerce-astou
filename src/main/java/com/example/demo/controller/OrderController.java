@@ -1,8 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ApiResponse;
-import com.example.demo.dto.OrderItemResponseDTO;
-import com.example.demo.dto.PageResponse;
+import com.example.demo.dto.*;
 import com.example.demo.dto.request.PlaceOrderRequest;
 import com.example.demo.model.Order;
 import com.example.demo.service.OrderService;
@@ -29,18 +27,26 @@ public class OrderController {
 
 
     @GetMapping
-    public ResponseEntity<PageResponse<Order>> getAllOrders(Pageable pageable) {
-        Page<Order> ordersPage = orderService.getAllOrders(pageable);
+    public ResponseEntity<PageResponse<OrderDTO>> getAllOrders(String search ,Pageable pageable) {
+
+        Page<OrderDTO> ordersPage = orderService.getAllOrdersDTO(search,pageable);
         return ResponseEntity.ok(new PageResponse<>(ordersPage));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<OrderDTO>> getOrdersById(@PathVariable Long id) {
+        ApiResponse<OrderDTO> response = orderService.getOrderDtoById(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     /**
      * Récupère une commande par son ID
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<List<OrderItemResponseDTO>>> getOrderById(@PathVariable Long id) {
-        ApiResponse<List<OrderItemResponseDTO>> response = orderService.getOrderById(id);
+    // Dans votre classe OrderController
+
+    @GetMapping("get/{id}")
+    public ResponseEntity<ApiResponse<OrderDTO>> getOrderById(@PathVariable Long id) {
+        ApiResponse<OrderDTO> response = orderService.getOrderDtoById(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -48,9 +54,9 @@ public class OrderController {
      * Place une nouvelle commande
      */
     @PostMapping("/place")
-    public ResponseEntity<ApiResponse<List<OrderItemResponseDTO>>> placeOrder(
+    public ResponseEntity<ApiResponse<OrderPlacedResponseDTO>> placeOrder(
             @RequestBody PlaceOrderRequest placeOrderRequest) {
-        ApiResponse<List<OrderItemResponseDTO>> response = orderService.placeOrder(placeOrderRequest);
+        ApiResponse<OrderPlacedResponseDTO> response = orderService.placeOrder(placeOrderRequest);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -60,6 +66,13 @@ public class OrderController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteOrder(@PathVariable Long id) {
         ApiResponse<Void> response = orderService.deleteOrder(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<OrderDTO>> cancelOrder(@PathVariable Long id) {
+        ApiResponse<OrderDTO> response = orderService.cancelOrder(id);
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

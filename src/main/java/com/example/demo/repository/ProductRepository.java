@@ -22,7 +22,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // Recherche par nom
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    Page<Product> findByShopId(Long shopId, Pageable pageable);
 
 
     // ------------------------------------------
@@ -61,6 +60,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> searchProducts(@Param("search") String search,
                                  Pageable pageable);
 
-
+    Page<Product> findByShopId(Long shopId, Pageable pageable);
 
 }
