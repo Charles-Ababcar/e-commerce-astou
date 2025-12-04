@@ -1,3 +1,7 @@
+server:
+  port: 8080
+  address: 0.0.0.0   # Écoute toutes les interfaces pour Docker
+
 spring:
   datasource:
     url: jdbc:postgresql://postgres_prod_db:5432/minane_prod?connectTimeout=5000&socketTimeout=5000
