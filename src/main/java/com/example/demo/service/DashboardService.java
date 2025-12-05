@@ -40,16 +40,17 @@ public class DashboardService {
 
     public ApiResponse<DashboardStatsDTO> getGeneralStatistics(LocalDate startDate, LocalDate endDate) {
 
-// 1. Récupération de TOUTES les commandes dans la période
+        // 1. Récupération de TOUTES les commandes dans la période
+        // NOTE: getOrders doit retourner un Page<Order>, d'où le .getContent()
         List<Order> allOrders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
 
-        // 2. FILTRAGE CRITIQUE : Exclure les commandes annulées
-        final String CANCELED_STATUS = "CANCELED"; // <<< ASSUREZ-VOUS QUE C'EST LA BONNE CHAÎNE
+        // 2. DÉFINITION du statut d'annulation et FILTRAGE CRITIQUE
+        final String CANCELED_STATUS = "CANCELED"; // <<< Utilisez la chaîne exacte que vous stockez en base de données pour l'annulation
 
         List<Order> validOrders = allOrders.stream()
-                // Le filtre vérifie si le statut N'EST PAS égal à la chaîne d'annulation.
+                // Le filtre garde toutes les commandes dont le statut N'EST PAS l'annulation.
                 .filter(order -> !order.getStatus().equalsIgnoreCase(CANCELED_STATUS))
-                .toList();
+                .collect(Collectors.toList());
 
         // --- CALCUL DES STATISTIQUES BASÉES SUR validOrders ---
 
@@ -64,6 +65,7 @@ public class DashboardService {
 
         // --- Les autres statistiques sont indépendantes de la validité de la commande ---
 
+        // NOTE: Les Repository calls (clientRepository.count(), etc.) sont conservés tels quels.
         long totalCustomers = clientRepository.count();
         long totalProducts = productRepository.count();
 
@@ -102,52 +104,6 @@ public class DashboardService {
         stats.setTrends(trends);
 
         return new ApiResponse<>("Statistiques générales", stats, HttpStatus.OK.value());
-
-        // Calcul des statistiques en FCFA (pas de division par 100)
-//        long totalRevenue = orders.stream()
-//                .mapToLong(Order::getTotalCents) // Supposons que totalCents est en FCFA
-//                .sum();
-//        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenue);
-//
-//        long totalOrders = orders.size();
-//        long totalCustomers = clientRepository.count();
-//        long totalProducts = productRepository.count();
-//
-//        // Clients des 30 derniers jours
-//        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
-//        long newCustomers = clientRepository.countByCreatedAtAfter(
-//                thirtyDaysAgo.atStartOfDay()
-//        );
-//
-//        // Taux de conversion (simplifié)
-//        long totalCarts = cartRepository.count();
-//        double conversionRate = totalCarts > 0 ?
-//                ((double) totalOrders / totalCarts) * 100 : 0;
-//
-//        // Panier moyen en FCFA
-//        BigDecimal averageOrderValue = totalOrders > 0 ?
-//                totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
-//                BigDecimal.ZERO;
-//
-//        // Tendences (simulées pour l'exemple)
-//        Map<String, Double> trends = new HashMap<>();
-//        trends.put("revenueGrowth", 12.5);
-//        trends.put("orderGrowth", 8.2);
-//        trends.put("customerGrowth", 15.3);
-//        trends.put("conversionGrowth", 4.7);
-//
-//        // Construction du DTO
-//        DashboardStatsDTO stats = new DashboardStatsDTO();
-//        stats.setTotalRevenue(totalRevenueFCFA);
-//        stats.setTotalOrders(totalOrders);
-//        stats.setTotalCustomers(totalCustomers);
-//        stats.setTotalProducts(totalProducts);
-//        stats.setNewCustomers(newCustomers);
-//        stats.setConversionRate(conversionRate);
-//        stats.setAverageOrderValue(averageOrderValue);
-//        stats.setTrends(trends);
-//
-//        return new ApiResponse<>("Statistiques générales", stats, HttpStatus.OK.value());
     }
 
 
