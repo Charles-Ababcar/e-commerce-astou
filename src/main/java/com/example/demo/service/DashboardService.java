@@ -39,15 +39,31 @@ public class DashboardService {
     private ClientRepository clientRepository;
 
     public ApiResponse<DashboardStatsDTO> getGeneralStatistics(LocalDate startDate, LocalDate endDate) {
+
+
+        List<Order> allOrders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
+
+        // 2. FILTRAGE CRITIQUE : Exclure les commandes annulées (CANCELED)
+        //    Assurez-vous que 'getStatus().name().equals("CANCELED")' reflète correctement
+        //    le champ de statut dans votre entité Order.
+        List<Order> validOrders = allOrders.stream()
+                // Nous supposons une méthode getStatus() qui retourne une ENUM ou une String
+                // représentant le statut de la commande.
+                .filter(order -> !order.getStatus().equals("CANCELED"))
+                .toList();
         List<Order> orders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
 
-        // Calcul des statistiques en FCFA (pas de division par 100)
-        long totalRevenue = orders.stream()
-                .mapToLong(Order::getTotalCents) // Supposons que totalCents est en FCFA
-                .sum();
-        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenue);
 
-        long totalOrders = orders.size();
+        // Calcul du Chiffre d'Affaires Total (FCFA) - Basé uniquement sur les commandes valides
+        long totalRevenueValid = validOrders.stream()
+                .mapToLong(Order::getTotalCents)
+                .sum();
+        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenueValid);
+
+        // Nombre total de commandes VALIDÉES
+        long totalOrders = validOrders.size();
+
+
         long totalCustomers = clientRepository.count();
         long totalProducts = productRepository.count();
 
@@ -57,17 +73,17 @@ public class DashboardService {
                 thirtyDaysAgo.atStartOfDay()
         );
 
-        // Taux de conversion (simplifié)
+        // Taux de conversion (basé sur les commandes validées / total des paniers)
         long totalCarts = cartRepository.count();
         double conversionRate = totalCarts > 0 ?
                 ((double) totalOrders / totalCarts) * 100 : 0;
 
-        // Panier moyen en FCFA
+        // Panier moyen en FCFA (basé sur le revenu des commandes validées)
         BigDecimal averageOrderValue = totalOrders > 0 ?
                 totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
                 BigDecimal.ZERO;
 
-        // Tendences (simulées pour l'exemple)
+        // Tendances (simulées pour l'exemple)
         Map<String, Double> trends = new HashMap<>();
         trends.put("revenueGrowth", 12.5);
         trends.put("orderGrowth", 8.2);
@@ -86,6 +102,52 @@ public class DashboardService {
         stats.setTrends(trends);
 
         return new ApiResponse<>("Statistiques générales", stats, HttpStatus.OK.value());
+
+        // Calcul des statistiques en FCFA (pas de division par 100)
+//        long totalRevenue = orders.stream()
+//                .mapToLong(Order::getTotalCents) // Supposons que totalCents est en FCFA
+//                .sum();
+//        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenue);
+//
+//        long totalOrders = orders.size();
+//        long totalCustomers = clientRepository.count();
+//        long totalProducts = productRepository.count();
+//
+//        // Clients des 30 derniers jours
+//        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+//        long newCustomers = clientRepository.countByCreatedAtAfter(
+//                thirtyDaysAgo.atStartOfDay()
+//        );
+//
+//        // Taux de conversion (simplifié)
+//        long totalCarts = cartRepository.count();
+//        double conversionRate = totalCarts > 0 ?
+//                ((double) totalOrders / totalCarts) * 100 : 0;
+//
+//        // Panier moyen en FCFA
+//        BigDecimal averageOrderValue = totalOrders > 0 ?
+//                totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
+//                BigDecimal.ZERO;
+//
+//        // Tendences (simulées pour l'exemple)
+//        Map<String, Double> trends = new HashMap<>();
+//        trends.put("revenueGrowth", 12.5);
+//        trends.put("orderGrowth", 8.2);
+//        trends.put("customerGrowth", 15.3);
+//        trends.put("conversionGrowth", 4.7);
+//
+//        // Construction du DTO
+//        DashboardStatsDTO stats = new DashboardStatsDTO();
+//        stats.setTotalRevenue(totalRevenueFCFA);
+//        stats.setTotalOrders(totalOrders);
+//        stats.setTotalCustomers(totalCustomers);
+//        stats.setTotalProducts(totalProducts);
+//        stats.setNewCustomers(newCustomers);
+//        stats.setConversionRate(conversionRate);
+//        stats.setAverageOrderValue(averageOrderValue);
+//        stats.setTrends(trends);
+//
+//        return new ApiResponse<>("Statistiques générales", stats, HttpStatus.OK.value());
     }
 
 
