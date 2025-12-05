@@ -40,19 +40,18 @@ public class DashboardService {
 
     public ApiResponse<DashboardStatsDTO> getGeneralStatistics(LocalDate startDate, LocalDate endDate) {
 
-
+// 1. Récupération de TOUTES les commandes dans la période
         List<Order> allOrders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
 
-        // 2. FILTRAGE CRITIQUE : Exclure les commandes annulées (CANCELED)
-        //    Assurez-vous que 'getStatus().name().equals("CANCELED")' reflète correctement
-        //    le champ de statut dans votre entité Order.
-        List<Order> validOrders = allOrders.stream()
-                // Nous supposons une méthode getStatus() qui retourne une ENUM ou une String
-                // représentant le statut de la commande.
-                .filter(order -> !order.getStatus().equals("CANCELED"))
-                .toList();
-        List<Order> orders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
+        // 2. FILTRAGE CRITIQUE : Exclure les commandes annulées
+        final String CANCELED_STATUS = "CANCELED"; // <<< ASSUREZ-VOUS QUE C'EST LA BONNE CHAÎNE
 
+        List<Order> validOrders = allOrders.stream()
+                // Le filtre vérifie si le statut N'EST PAS égal à la chaîne d'annulation.
+                .filter(order -> !order.getStatus().equalsIgnoreCase(CANCELED_STATUS))
+                .toList();
+
+        // --- CALCUL DES STATISTIQUES BASÉES SUR validOrders ---
 
         // Calcul du Chiffre d'Affaires Total (FCFA) - Basé uniquement sur les commandes valides
         long totalRevenueValid = validOrders.stream()
@@ -63,6 +62,7 @@ public class DashboardService {
         // Nombre total de commandes VALIDÉES
         long totalOrders = validOrders.size();
 
+        // --- Les autres statistiques sont indépendantes de la validité de la commande ---
 
         long totalCustomers = clientRepository.count();
         long totalProducts = productRepository.count();
