@@ -273,8 +273,8 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Commande non trouvée avec l'ID: " + orderId));
 
-        // 1. Validation du statut : ne peut annuler que si la commande n'est pas déjà finalisée (ex: DELIVERED ou CANCELLED)
-        if (order.getStatus().equals("CANCELLED") || order.getStatus().equals("DELIVERED")) {
+        // 1. Validation du statut : ne peut annuler que si la commande n'est pas déjà finalisée
+        if (order.getStatus().equalsIgnoreCase("CANCELLED") || order.getStatus().equalsIgnoreCase("DELIVERED")) {
             return new ApiResponse<>(
                     "Impossible d'annuler. Statut actuel: " + order.getStatus(),
                     convertToOrderDto(order),
@@ -289,20 +289,25 @@ public class OrderService {
             // ⚠️ Mise à jour du stock : On ajoute la quantité de l'article annulé.
             product.setStock(product.getStock() + item.getQuantity());
 
-            // Sauvegarde immédiate de l'entité Product
-            productRepository.save(product);
+            // >> REMARQUE: productRepository.save(product) n'est pas nécessaire ici
+            // car la transaction (via @Transactional) prend en charge la persistance des entités modifiées.
         }
 
         // 3. Mise à jour du statut de la commande
+        // C'est cette valeur qui sera utilisée pour exclure la commande des revenus.
         order.setStatus("CANCELLED");
         order.setUpdatedAt(LocalDateTime.now());
-        Order cancelledOrder = orderRepository.save(order);
 
-        // 4. Mapping et Retour DTO
+        // 4. (Optionnel, si vous avez besoin d'un champ de remboursement)
+        // order.setRefundInitiatedAt(LocalDateTime.now());
+
+        Order cancelledOrder = orderRepository.save(order); // Sauvegarde l'Order et met à jour les Products
+
+        // 5. Mapping et Retour DTO
         OrderDTO orderDto = convertToOrderDto(cancelledOrder);
 
         return new ApiResponse<>(
-                "Commande annulée et stock mis à jour avec succès",
+                "Commande annulée et stock mis à jour avec succès. Prix total marqué pour exclusion des statistiques.",
                 orderDto,
                 HttpStatus.OK.value()
         );

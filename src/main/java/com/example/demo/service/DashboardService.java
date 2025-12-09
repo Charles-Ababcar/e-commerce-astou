@@ -41,35 +41,41 @@ public class DashboardService {
     public ApiResponse<DashboardStatsDTO> getGeneralStatistics(LocalDate startDate, LocalDate endDate) {
 
         // 1. Récupération de TOUTES les commandes dans la période
-        // NOTE: getOrders doit retourner un Page<Order>, d'où le .getContent()
+        // NOTE: getOrders est supposé être une méthode qui renvoie un Page<Order>
         List<Order> allOrders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
 
         // 2. DÉFINITION du statut d'annulation et FILTRAGE CRITIQUE
-        final String CANCELED_STATUS = "CANCELED"; // <<< Utilisez la chaîne exacte que vous stockez en base de données pour l'annulation
+        // 🚨 ASSUREZ-VOUS QUE LA CHAÎNE EST EXACTEMENT LA MÊME QUE DANS cancelOrder
+        final String CANCELED_STATUS = "CANCELLED";
 
         List<Order> validOrders = allOrders.stream()
-                // Le filtre garde toutes les commandes dont le statut N'EST PAS l'annulation.
+                // Le filtre garde toutes les commandes dont le statut N'EST PAS 'CANCELLED'
+                // pour le calcul des revenus.
                 .filter(order -> !order.getStatus().equalsIgnoreCase(CANCELED_STATUS))
-                .collect(Collectors.toList());
+                .toList();
 
         // --- CALCUL DES STATISTIQUES BASÉES SUR validOrders ---
 
-        // Calcul du Chiffre d'Affaires Total (FCFA) - Basé uniquement sur les commandes valides
+        // Calcul du Chiffre d'Affaires Total (en centimes) - Basé uniquement sur les commandes valides
         long totalRevenueValid = validOrders.stream()
                 .mapToLong(Order::getTotalCents)
                 .sum();
+
+        // Conversion en FCFA (si l'unité est en centimes)
         BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenueValid);
 
-        // Nombre total de commandes VALIDÉES
+        // Nombre total de commandes VALIDÉES (non annulées)
         long totalOrders = validOrders.size();
 
-        // --- Les autres statistiques sont indépendantes de la validité de la commande ---
+        // --- Statistiques indépendantes de la validité de la commande ---
 
-        // NOTE: Les Repository calls (clientRepository.count(), etc.) sont conservés tels quels.
+        // Nombre total de clients
         long totalCustomers = clientRepository.count();
+
+        // Nombre total de produits actifs
         long totalProducts = productRepository.count();
 
-        // Clients des 30 derniers jours
+        // Clients enregistrés des 30 derniers jours
         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
         long newCustomers = clientRepository.countByCreatedAtAfter(
                 thirtyDaysAgo.atStartOfDay()
@@ -105,7 +111,6 @@ public class DashboardService {
 
         return new ApiResponse<>("Statistiques générales", stats, HttpStatus.OK.value());
     }
-
 
     public ApiResponse<List<SalesTrendDTO>> getSalesTrends(String type, LocalDate startDate, LocalDate endDate) {
         List<SalesTrendDTO> trends = new ArrayList<>();

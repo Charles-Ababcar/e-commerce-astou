@@ -24,6 +24,9 @@ public class Order {
 
     private String orderNumber;
 
+    @Column(name = "is_refund_initiated")
+    private Boolean isRefundInitiated = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
