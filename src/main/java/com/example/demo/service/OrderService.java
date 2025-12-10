@@ -48,19 +48,19 @@ public class OrderService {
     /**
      * Récupère toutes les commandes avec pagination et mapping DTO
      */
-    // Dans OrderService.java (ou OrderServiceImpl.java)
 
-// ... (Assurez-vous d'avoir les imports corrects pour OrderStatus et PageRequest/Sort) ...
+
+    // Dans src/main/java/com/example/demo/service/OrderService.java
+
+// 🚨 Assurez-vous d'importer l'Enum: import com.example.demo.model.OrderStatus;
 
     public Page<OrderDTO> getAllOrdersDTO(String search, String status, Pageable pageable) {
 
-        // 1. Détermination des états de filtre (MANQUANT DANS VOTRE CODE FOURNI)
-        // 🚨 Correction : Définir si les filtres de recherche et de statut sont actifs.
+        // 1. Détermination des états de filtre (🚨 CETTE PARTIE ÉTAIT MANQUANTE DANS VOTRE FRAGMENT)
         final boolean isSearchActive = search != null && !search.isEmpty();
         final boolean isStatusActive = status != null && !status.equalsIgnoreCase("ALL");
 
-        // 2. Définition du tri (Correction du tri par défaut)
-        // 🚨 Correction : Utiliser le tri passé par le 'pageable' s'il existe, sinon utiliser 'createdAt' DESC par défaut.
+        // 2. Définition du tri
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
@@ -76,6 +76,7 @@ public class OrderService {
                 orderStatus = OrderStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException e) {
                 System.err.println("Statut de commande invalide reçu: " + status);
+
             }
         }
 
@@ -84,13 +85,10 @@ public class OrderService {
         // 4. Exécuter la requête
         if (isSearchActive || orderStatus != null) {
 
-            // Si au moins un filtre est actif, on utilise la méthode findBySearchAndStatus.
-            // Les paramètres sont passés en NULL si le filtre n'est pas actif/valide.
             String searchParam = isSearchActive ? search : null;
-            OrderStatus statusParam = orderStatus;
 
-            // Appel de la méthode combinée
-            page = orderRepository.findBySearchAndStatus(searchParam, statusParam, sortedPageable);
+
+            page = orderRepository.findBySearchAndStatus(searchParam, orderStatus, sortedPageable);
 
         } else {
             // Aucun filtre actif
