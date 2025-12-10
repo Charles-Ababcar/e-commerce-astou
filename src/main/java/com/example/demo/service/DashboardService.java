@@ -42,16 +42,17 @@ public class DashboardService {
 
         // 1. Récupération de TOUTES les commandes dans la période
         // NOTE: getOrders est supposé être une méthode qui renvoie un Page<Order>
+        // Assurez-vous que cette méthode est disponible, si elle n'existe pas encore:
+        // List<Order> allOrders = orderRepository.findByCreatedAtBetween(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
         List<Order> allOrders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
 
         // 2. DÉFINITION du statut d'annulation et FILTRAGE CRITIQUE
-        // 🚨 ASSUREZ-VOUS QUE LA CHAÎNE EST EXACTEMENT LA MÊME QUE DANS cancelOrder
-        final String CANCELED_STATUS = "CANCELLED";
+        // 🚨 CORRECTION : Utilisation directe de la valeur de l'Enum (plus sûr que String)
+        final OrderStatus CANCELED_STATUS = OrderStatus.CANCELLED;
 
         List<Order> validOrders = allOrders.stream()
-                // Le filtre garde toutes les commandes dont le statut N'EST PAS 'CANCELLED'
-                // pour le calcul des revenus.
-                .filter(order -> !order.getStatus().equalsIgnoreCase(CANCELED_STATUS))
+                // 🚨 CORRECTION DE LA LIGNE 54 : Utilisation de la comparaison d'Enum (==)
+                .filter(order -> order.getStatus() != CANCELED_STATUS)
                 .toList();
 
         // --- CALCUL DES STATISTIQUES BASÉES SUR validOrders ---
@@ -61,7 +62,10 @@ public class DashboardService {
                 .mapToLong(Order::getTotalCents)
                 .sum();
 
-        // Conversion en FCFA (si l'unité est en centimes)
+        // Conversion en FCFA (si l'unité est en centimes, ici on utilise un long pour la somme)
+        // NOTE: Si totalRevenueValid est en centimes, il faut le diviser par 100 pour obtenir des FCFA entiers si nécessaire.
+        // Cependant, le DTO DashboardStatsDTO utilise probablement BigDecimal pour les calculs précis.
+        // Je suppose que totalRevenueFCFA est en centimes dans votre logique.
         BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenueValid);
 
         // Nombre total de commandes VALIDÉES (non annulées)
@@ -111,7 +115,6 @@ public class DashboardService {
 
         return new ApiResponse<>("Statistiques générales", stats, HttpStatus.OK.value());
     }
-
     public ApiResponse<List<SalesTrendDTO>> getSalesTrends(String type, LocalDate startDate, LocalDate endDate) {
         List<SalesTrendDTO> trends = new ArrayList<>();
 
