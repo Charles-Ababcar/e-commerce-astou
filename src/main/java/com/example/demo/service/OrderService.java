@@ -64,9 +64,7 @@ public class OrderService {
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                pageable.getSort().isSorted()
-                        ? pageable.getSort()
-                        : Sort.by(Sort.Direction.DESC, "createdAt")
+                pageable.getSort().isSorted() ? pageable.getSort() : Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
         // 3. Conversion sécurisée du statut (String vers Enum)
