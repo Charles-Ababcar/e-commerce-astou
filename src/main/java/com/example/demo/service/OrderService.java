@@ -48,23 +48,55 @@ public class OrderService {
     /**
      * Récupère toutes les commandes avec pagination et mapping DTO
      */
-    public Page<OrderDTO> getAllOrdersDTO(String search, Pageable pageable) {
+    // Dans OrderService.java (ou OrderServiceImpl.java)
+
+// ... (Assurez-vous d'avoir les imports corrects pour OrderStatus et PageRequest/Sort) ...
+
+    public Page<OrderDTO> getAllOrdersDTO(String search, String status, Pageable pageable) {
+
+        // 1. Détermination des états de filtre (MANQUANT DANS VOTRE CODE FOURNI)
+        // 🚨 Correction : Définir si les filtres de recherche et de statut sont actifs.
+        final boolean isSearchActive = search != null && !search.isEmpty();
+        final boolean isStatusActive = status != null && !status.equalsIgnoreCase("ALL");
+
+        // 2. Définition du tri (Correction du tri par défaut)
+        // 🚨 Correction : Utiliser le tri passé par le 'pageable' s'il existe, sinon utiliser 'createdAt' DESC par défaut.
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt") // tri du plus récent au plus ancien
+                pageable.getSort().isSorted()
+                        ? pageable.getSort()
+                        : Sort.by(Sort.Direction.DESC, "createdAt")
         );
+
+        // 3. Conversion sécurisée du statut (String vers Enum)
+        OrderStatus orderStatus = null;
+        if (isStatusActive) {
+            try {
+                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                System.err.println("Statut de commande invalide reçu: " + status);
+            }
+        }
 
         Page<Order> page;
 
-        if (search != null && !search.isEmpty()) {
-            page = orderRepository.searchOrder(search, sortedPageable);
+        // 4. Exécuter la requête
+        if (isSearchActive || orderStatus != null) {
 
-        }  else {
+            // Si au moins un filtre est actif, on utilise la méthode findBySearchAndStatus.
+            // Les paramètres sont passés en NULL si le filtre n'est pas actif/valide.
+            String searchParam = isSearchActive ? search : null;
+            OrderStatus statusParam = orderStatus;
+
+            // Appel de la méthode combinée
+            page = orderRepository.findBySearchAndStatus(searchParam, statusParam, sortedPageable);
+
+        } else {
+            // Aucun filtre actif
             page = orderRepository.findAll(sortedPageable);
         }
 
-        // Mappez la Page<Order> en Page<OrderDTO>
         return page.map(this::convertToOrderDto);
     }
 
@@ -126,7 +158,7 @@ public class OrderService {
 
         Order order = new Order();
         order.setClient(client);
-        order.setStatus("PLACED");
+        order.setStatus(OrderStatus.PLACED);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
 
@@ -237,7 +269,7 @@ public class OrderService {
         dto.setOrderId(savedOrder.getId());
         dto.setOrderNumber(savedOrder.getOrderNumber());
         dto.setTotalCents(savedOrder.getTotalCents());
-        dto.setStatus(savedOrder.getStatus());
+        dto.setStatus(savedOrder.getStatus().name());
         dto.setItems(savedOrder.getItems().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList()));
@@ -274,9 +306,10 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Commande non trouvée avec l'ID: " + orderId));
 
         // 1. Validation du statut : ne peut annuler que si la commande n'est pas déjà finalisée
-        if (order.getStatus().equalsIgnoreCase("CANCELLED") || order.getStatus().equalsIgnoreCase("DELIVERED")) {
+        // 1. Validation du statut : utiliser les méthodes de l'Enum
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.DELIVERED) {
             return new ApiResponse<>(
-                    "Impossible d'annuler. Statut actuel: " + order.getStatus(),
+                    "Impossible d'annuler. Statut actuel: " + order.getStatus().name(),
                     convertToOrderDto(order),
                     HttpStatus.BAD_REQUEST.value()
             );
@@ -295,7 +328,7 @@ public class OrderService {
 
         // 3. Mise à jour du statut de la commande
         // C'est cette valeur qui sera utilisée pour exclure la commande des revenus.
-        order.setStatus("CANCELLED");
+        order.setStatus(OrderStatus.CANCELLED);
         order.setUpdatedAt(LocalDateTime.now());
 
         // 4. (Optionnel, si vous avez besoin d'un champ de remboursement)
@@ -351,7 +384,7 @@ public class OrderService {
         dto.setId(order.getId());
         dto.setTotalCents(order.getTotalCents());
         dto.setOrderNumber(order.getOrderNumber());
-        dto.setStatus(order.getStatus());
+        dto.setStatus(order.getStatus().name());
         dto.setCreatedAt(order.getCreatedAt());
         dto.setUpdatedAt(order.getUpdatedAt());
 

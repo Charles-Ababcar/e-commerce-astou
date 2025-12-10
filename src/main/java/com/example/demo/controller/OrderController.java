@@ -27,9 +27,11 @@ public class OrderController {
 
 
     @GetMapping
-    public ResponseEntity<PageResponse<OrderDTO>> getAllOrders(String search ,Pageable pageable) {
+    public ResponseEntity<PageResponse<OrderDTO>> getAllOrders(@RequestParam(required = false) String search,
+                                                               @RequestParam(required = false) String status,
+                                                               Pageable pageable) {
 
-        Page<OrderDTO> ordersPage = orderService.getAllOrdersDTO(search,pageable);
+        Page<OrderDTO> ordersPage = orderService.getAllOrdersDTO(search, status, pageable);
         return ResponseEntity.ok(new PageResponse<>(ordersPage));
     }
 

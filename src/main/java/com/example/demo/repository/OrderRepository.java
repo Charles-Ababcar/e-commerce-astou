@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.model.Order;
+import com.example.demo.model.OrderStatus;
 import com.example.demo.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,7 +44,21 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT p FROM Order p WHERE " +
             "LOWER(p.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) ")
     Page<Order> searchOrder(@Param("search") String search,
-                                 Pageable pageable);
+                            Pageable pageable);
+
+
+    // ⭐️ NOUVELLE MÉTHODE : Recherche combinée (texte ET statut)
+    @Query("SELECT o FROM Order o WHERE " +
+            // Condition de recherche textuelle (OrderNumber, Client Name, etc.)
+            // Ici, nous recherchons sur orderNumber OU client name (selon votre besoin)
+            "(LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR :search IS NULL) AND " +
+            // Condition de filtre par statut
+            "(:status IS NULL OR o.status = :status)")
+    Page<Order> findBySearchAndStatus(
+            @Param("search") String search,
+            @Param("status") OrderStatus status, // Utilisez l'Enum ici
+            Pageable pageable);
+
 
 
 }

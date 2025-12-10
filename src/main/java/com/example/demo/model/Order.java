@@ -20,7 +20,10 @@ public class Order {
     @Column(name = "total_cents")
     private long totalCents;
 
-    private String status;
+    //private String status;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 
     private String orderNumber;
 
@@ -43,6 +46,10 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
+
+
+
+
 
 
 }
