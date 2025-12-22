@@ -26,4 +26,6 @@ public class PlaceOrderRequest {
      */
     private String deliveryAddressDetail;
 
+    private String channel; // "WEB" ou "WHATSAPP"
+
 }

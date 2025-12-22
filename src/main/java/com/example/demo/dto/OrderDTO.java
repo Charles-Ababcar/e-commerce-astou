@@ -25,6 +25,7 @@ public class OrderDTO {
     private String deliveryZone;          // Le nom de la zone (ex: "Zone 1")
     private String deliveryAddressDetail;
 
+    private String channel;
     // Si vous mappez Client :
     private ClientDTO client;
 

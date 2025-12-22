@@ -150,6 +150,11 @@ public class OrderService {
         order.setStatus(OrderStatus.PLACED);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
+        if (placeOrderRequest.getChannel() != null) {
+            order.setChannel(OrderChannel.valueOf(placeOrderRequest.getChannel().toUpperCase()));
+        } else {
+            order.setChannel(OrderChannel.WEB);
+        }
 
         // 🚚 GESTION DYNAMIQUE DE LA LIVRAISON
         // On récupère les infos de livraison depuis la zone en base de données

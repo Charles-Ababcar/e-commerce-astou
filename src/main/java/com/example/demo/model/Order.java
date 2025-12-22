@@ -62,6 +62,9 @@ public class Order {
 
 
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "channel")
+    private OrderChannel channel = OrderChannel.WEB; // Par défaut c'est le site web
 
 
 
