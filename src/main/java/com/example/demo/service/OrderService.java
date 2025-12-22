@@ -31,22 +31,11 @@ import java.util.stream.Collectors;
 public class OrderService {
 
 
-    private OrderRepository orderRepository;
-
-
-    private ClientRepository clientRepository;
-
-
-    private ProductRepository productRepository;
-
-
-    private CartItemRepository cartItemRepository;
-
-
-    // Dans OrderService.java
-
-    private CartRepository cartRepository;
-
+    private final OrderRepository orderRepository;
+    private final ClientRepository clientRepository;
+    private final ProductRepository productRepository;
+    private final CartItemRepository cartItemRepository;
+    private final CartRepository cartRepository;
     private final DeliveryZoneRepository deliveryZoneRepository;
     /**
      * Récupère toutes les commandes avec pagination et mapping DTO
