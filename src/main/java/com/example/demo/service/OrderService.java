@@ -378,6 +378,10 @@ public class OrderService {
         dto.setStatus(order.getStatus().name());
         dto.setCreatedAt(order.getCreatedAt());
         dto.setUpdatedAt(order.getUpdatedAt());
+        // À ajouter dans convertToOrderDto
+        dto.setDeliveryFee(order.getDeliveryFee());
+        dto.setDeliveryZone(order.getDeliveryZone());
+        dto.setDeliveryAddressDetail(order.getDeliveryAddressDetail());
 
         // Mapping des items
         List<OrderItemResponseDTO> itemsDto = order.getItems().stream()
