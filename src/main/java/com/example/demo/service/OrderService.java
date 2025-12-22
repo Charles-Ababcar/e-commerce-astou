@@ -140,7 +140,7 @@ public class OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         if (placeOrderRequest.getChannel() != null) {
-            order.setChannel(OrderChannel.valueOf(placeOrderRequest.getChannel().toUpperCase()));
+            order.setChannel(OrderChannel.valueOf(placeOrderRequest.getChannel()));
         } else {
             order.setChannel(OrderChannel.WEB);
         }

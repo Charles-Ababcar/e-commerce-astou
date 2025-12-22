@@ -88,6 +88,8 @@ public class DashboardService {
                 totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
                 BigDecimal.ZERO;
 
+
+
         // --- TENDANCES (Simulées) ---
         Map<String, Double> trends = new HashMap<>();
         trends.put("revenueGrowth", 12.5);
