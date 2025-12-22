@@ -139,8 +139,14 @@ public class OrderService {
         order.setStatus(OrderStatus.PLACED);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
-        if (placeOrderRequest.getChannel() != null) {
-            order.setChannel(OrderChannel.valueOf(placeOrderRequest.getChannel()));
+        if (placeOrderRequest.getChannel() != null && !placeOrderRequest.getChannel().isBlank()) {
+            try {
+                // Convertit "WHATSAPP" ou "whatsapp" en OrderChannel.WHATSAPP
+                order.setChannel(OrderChannel.valueOf(placeOrderRequest.getChannel().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Si le canal envoyé n'existe pas dans l'Enum, on met WEB par défaut
+                order.setChannel(OrderChannel.WEB);
+            }
         } else {
             order.setChannel(OrderChannel.WEB);
         }
