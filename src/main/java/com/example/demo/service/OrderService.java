@@ -6,6 +6,7 @@ import com.example.demo.dto.request.PlaceOrderRequest;
 import com.example.demo.dto.request.ProductResponseDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,25 +27,27 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
-    @Autowired
+
     private OrderRepository orderRepository;
 
-    @Autowired
+
     private ClientRepository clientRepository;
 
-    @Autowired
+
     private ProductRepository productRepository;
 
-    @Autowired
+
     private CartItemRepository cartItemRepository;
 
 
     // Dans OrderService.java
-    @Autowired
+
     private CartRepository cartRepository;
 
+    private final DeliveryZoneRepository deliveryZoneRepository;
     /**
      * Récupère toutes les commandes avec pagination et mapping DTO
      */
@@ -119,76 +122,76 @@ public class OrderService {
     /**
      * Passe une commande
      */
+    @Transactional
     public ApiResponse<OrderPlacedResponseDTO> placeOrder(PlaceOrderRequest placeOrderRequest) {
 
-        log.info("==============================================================");
         log.info("🚀 [placeOrder] DÉBUT DU TRAITEMENT");
-        log.info("==============================================================");
 
         // -------------------------
-        // 1️⃣ CLIENT
+        // 1️⃣ GESTION DU CLIENT
         // -------------------------
-        log.info("👤 Vérification du client : {}", placeOrderRequest.getClient().getEmail());
+        String email = placeOrderRequest.getClient().getEmail();
+        Client client;
 
-        Client client = clientRepository.findByEmail(placeOrderRequest.getClient().getEmail())
-                .orElseGet(() -> {
-                    log.warn("➕ Client inexistant → création...");
-                    Client c = new Client();
-                    c.setName(placeOrderRequest.getClient().getName());
-                    c.setEmail(placeOrderRequest.getClient().getEmail());
-                    c.setAddress(placeOrderRequest.getClient().getAddress());
-                    c.setPhoneNumber(placeOrderRequest.getClient().getPhoneNumber());
-                    c.setCreatedAt(LocalDateTime.now());
-                    c.setUpdatedAt(LocalDateTime.now());
-                    log.info("📌 Nouveau client créé : {}", c.getEmail());
-                    return clientRepository.save(c);
-                });
-
-        log.info("✅ Client OK → ID: {}", client.getId());
-
+        if (email != null && !email.trim().isEmpty()) {
+            log.info("👤 Vérification par email : {}", email);
+            client = clientRepository.findByEmail(email)
+                    .orElseGet(() -> createNewClient(placeOrderRequest, email));
+        } else {
+            log.warn("👤 Email non fourni. Création d'un nouveau client temporaire.");
+            client = createNewClient(placeOrderRequest, null);
+        }
 
         // -------------------------
-        // 2️⃣ COMMANDE
+        // 2️⃣ INITIALISATION COMMANDE & LIVRAISON
         // -------------------------
-        log.info("📦 Vérification du stock des produits...");
-
         Order order = new Order();
         order.setClient(client);
         order.setStatus(OrderStatus.PLACED);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
 
-        List<OrderItem> orderItems = new ArrayList<>();
-        long total = 0;
+        // 🚚 GESTION DYNAMIQUE DE LA LIVRAISON
+        // On récupère les infos de livraison depuis la zone en base de données
+        if (placeOrderRequest.getDeliveryZoneId() == null) {
+            return new ApiResponse<>("Zone de livraison obligatoire", null, 400);
+        }
 
+        DeliveryZone zone = deliveryZoneRepository.findById(placeOrderRequest.getDeliveryZoneId())
+                .orElse(null);
+
+        if (zone == null) {
+            log.error("❌ Zone de livraison introuvable ID: {}", placeOrderRequest.getDeliveryZoneId());
+            return new ApiResponse<>("Zone de livraison invalide", null, 400);
+        }
+
+        // Sécurisation : on utilise le prix de la base de données, pas celui du frontend
+        order.setDeliveryFee(zone.getPrice());
+        order.setDeliveryZone(zone.getName());
+        order.setDeliveryAddressDetail(placeOrderRequest.getDeliveryAddressDetail());
+
+        log.info("🚚 Livraison configurée : {} ({} FCFA)", zone.getName(), zone.getPrice());
+
+        // -------------------------
+        // 3️⃣ VÉRIFICATION DU STOCK
+        // -------------------------
         for (OrderItemRequest itemDto : placeOrderRequest.getOrderItems()) {
-
-            Product product = productRepository.findById(itemDto.getProductId())
-                    .orElse(null);
-
+            Product product = productRepository.findById(itemDto.getProductId()).orElse(null);
             if (product == null) {
-                log.error("❌ Produit introuvable : {}", itemDto.getProductId());
                 return new ApiResponse<>("Produit introuvable", null, 400);
             }
-
-            log.info("🧩 {} | Stock: {} | Demandé: {}",
-                    product.getName(),
-                    product.getStock(),
-                    itemDto.getQuantity());
-
             if (product.getStock() < itemDto.getQuantity()) {
-                log.error("❌ Stock INSUFFISANT pour {}", product.getName());
-                return new ApiResponse<>("Stock insuffisant", null, 400);
+                return new ApiResponse<>("Stock insuffisant pour " + product.getName(), null, 400);
             }
         }
 
         // -------------------------
-        // 3️⃣ CRÉATION DES ITEMS
+        // 4️⃣ CRÉATION DES ITEMS & CALCUL DU TOTAL
         // -------------------------
-        log.info("🛠️ Création des OrderItems + MàJ du stock...");
+        List<OrderItem> orderItems = new ArrayList<>();
+        long totalProducts = 0;
 
         for (OrderItemRequest itemDto : placeOrderRequest.getOrderItems()) {
-
             Product product = productRepository.findById(itemDto.getProductId()).get();
 
             OrderItem item = new OrderItem();
@@ -198,88 +201,80 @@ public class OrderService {
             item.setPriceCents(product.getPriceCents());
             orderItems.add(item);
 
-            long lineTotal = (long) product.getPriceCents() * itemDto.getQuantity();
-            total += lineTotal;
+            totalProducts += (long) product.getPriceCents() * itemDto.getQuantity();
 
-            log.debug("   → Item: {} | Qty: {} | Prix: {} | Total ligne: {}",
-                    product.getName(),
-                    itemDto.getQuantity(),
-                    product.getPriceCents(),
-                    lineTotal);
-
+            // Mise à jour stock
             product.setStock(product.getStock() - itemDto.getQuantity());
             productRepository.save(product);
 
+            // On lie la commande au shop du premier produit
             order.setShop(product.getShop());
         }
 
+        // CALCUL FINAL : Produits + Livraison
+        long grandTotal = totalProducts + zone.getPrice();
         order.setItems(orderItems);
-        order.setTotalCents(total);
+        order.setTotalCents(grandTotal);
 
         // -------------------------
-        // 4️⃣ SAUVEGARDE + NUMÉRO DE COMMANDE
+        // 5️⃣ SAUVEGARDE & NUMÉRO DE COMMANDE
         // -------------------------
         Order savedOrder = orderRepository.save(order);
-
-        String datePart = savedOrder.getCreatedAt()
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-
+        String datePart = savedOrder.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String orderNumber = "CMD-" + datePart + "-" + savedOrder.getId();
         savedOrder.setOrderNumber(orderNumber);
         orderRepository.save(savedOrder);
 
-        log.info("🧾 Commande créée → Numéro: {}", orderNumber);
-
-
         // -------------------------
-        // 5️⃣ SUPPRESSION DU PANIER
+        // 6️⃣ NETTOYAGE DU PANIER
         // -------------------------
-        log.info("====== 🔍 DÉBUT SUPPRESSION PANIER ======");
-
         Long cartId = placeOrderRequest.getCartId();
-
         if (cartId != null) {
-
-            cartRepository.findById(cartId).ifPresentOrElse(cart -> {
-                log.info("🛒 Panier trouvé → ID: {}", cart.getId());
+            cartRepository.findById(cartId).ifPresent(cart -> {
                 try {
                     cartRepository.delete(cart);
-                    log.info("✅ Panier et items supprimés via cascade.");
+                    log.info("✅ Panier supprimé.");
                 } catch (Exception e) {
-                    log.error("❌ ERREUR LORS DE LA SUPPRESSION DU PANIER : {}", e.getMessage());
+                    log.error("❌ Erreur suppression panier: {}", e.getMessage());
                 }
-            }, () -> {
-                log.warn("⚠️ Aucun panier trouvé avec l'ID : {}", cartId);
             });
-        } else {
-            log.warn("⚠️ CartId reçu : NULL");
         }
 
-        log.info("====== 🏁 FIN SUPPRESSION PANIER ======");
-
-
         // -------------------------
-        // 6️⃣ RÉPONSE
+        // 7️⃣ PRÉPARATION DE LA RÉPONSE
         // -------------------------
-        OrderPlacedResponseDTO dto = new OrderPlacedResponseDTO();
-        dto.setOrderId(savedOrder.getId());
-        dto.setOrderNumber(savedOrder.getOrderNumber());
-        dto.setTotalCents(savedOrder.getTotalCents());
-        dto.setStatus(savedOrder.getStatus().name());
-        dto.setItems(savedOrder.getItems().stream()
+        OrderPlacedResponseDTO responseDto = new OrderPlacedResponseDTO();
+        responseDto.setOrderId(savedOrder.getId());
+        responseDto.setOrderNumber(savedOrder.getOrderNumber());
+        responseDto.setTotalCents(savedOrder.getTotalCents());
+        responseDto.setStatus(savedOrder.getStatus().name());
+        responseDto.setItems(savedOrder.getItems().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList()));
 
-        log.info("🎉 Commande terminée avec succès !");
-        log.info("==============================================================");
-        log.info("✅ [placeOrder] FIN DU TRAITEMENT");
-        log.info("==============================================================");
+        log.info("🎉 Commande {} terminée avec succès !", orderNumber);
 
         return new ApiResponse<>(
-                "Commande " + orderNumber + " passée avec succès",
-                dto,
+                "Commande passée avec succès",
+                responseDto,
                 HttpStatus.CREATED.value()
         );
+    }
+
+
+    // ⭐️ MÉTHODE D'AIDE À AJOUTER dans OrderService.java pour la création d'un client
+    private Client createNewClient(PlaceOrderRequest placeOrderRequest, String email) {
+        // Note: placeOrderRequest.getClient() est un DTO contenant les informations
+        Client c = new Client();
+        c.setName(placeOrderRequest.getClient().getName());
+        // Assignation conditionnelle de l'email (peut être NULL)
+        c.setEmail(email);
+        c.setAddress(placeOrderRequest.getClient().getAddress());
+        c.setPhoneNumber(placeOrderRequest.getClient().getPhoneNumber());
+        c.setCreatedAt(LocalDateTime.now());
+        c.setUpdatedAt(LocalDateTime.now());
+        log.info("📌 Nouveau client créé : Nom={}, Email={}", c.getName(), c.getEmail() != null ? c.getEmail() : "NULL");
+        return clientRepository.save(c);
     }
 
 

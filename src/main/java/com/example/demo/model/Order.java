@@ -30,6 +30,19 @@ public class Order {
     @Column(name = "is_refund_initiated")
     private Boolean isRefundInitiated = false;
 
+    // --- 🚚 NOUVEAUX CHAMPS POUR LA LIVRAISON ---
+
+    @Column(name = "delivery_fee")
+    private long deliveryFee; // Stocke le prix de la zone au moment de l'achat
+
+    @Column(name = "delivery_zone")
+    private String deliveryZone; // Nom de la zone (ex: "Zone 1")
+
+    @Column(name = "delivery_address_detail")
+    private String deliveryAddressDetail; // Quartier précis (ex: "Almadies")
+
+    // --------------------------------------------
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

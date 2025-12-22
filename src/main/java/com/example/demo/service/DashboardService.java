@@ -43,7 +43,7 @@ public class DashboardService {
         // 1. Récupération de TOUTES les commandes dans la période
         // NOTE: getOrders est supposé être une méthode qui renvoie un Page<Order>
         // Assurez-vous que cette méthode est disponible, si elle n'existe pas encore:
-        // List<Order> allOrders = orderRepository.findByCreatedAtBetween(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+
         List<Order> allOrders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
 
         // 2. DÉFINITION du statut d'annulation et FILTRAGE CRITIQUE
@@ -57,6 +57,23 @@ public class DashboardService {
 
         // --- CALCUL DES STATISTIQUES BASÉES SUR validOrders ---
 
+        // 1. Calcul du Revenu TOTAL (Produits + Livraisons)
+        long totalRevenueWithDelivery = validOrders.stream()
+                .mapToLong(Order::getTotalCents)
+                .sum();
+
+// 2. Calcul des FRAIS DE LIVRAISON totaux perçus
+        long totalDeliveryFees = validOrders.stream()
+                .mapToLong(Order::getDeliveryFee) // Nouveau champ ajouté à l'entité
+                .sum();
+
+// 3. Calcul du REVENU NET (Produits uniquement)
+// C'est ce montant qui représente votre véritable performance commerciale
+        long netRevenueProducts = totalRevenueWithDelivery - totalDeliveryFees;
+
+        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(netRevenueProducts);
+        BigDecimal deliveryTotalFCFA = BigDecimal.valueOf(totalDeliveryFees);
+
         // Calcul du Chiffre d'Affaires Total (en centimes) - Basé uniquement sur les commandes valides
         long totalRevenueValid = validOrders.stream()
                 .mapToLong(Order::getTotalCents)
@@ -66,7 +83,7 @@ public class DashboardService {
         // NOTE: Si totalRevenueValid est en centimes, il faut le diviser par 100 pour obtenir des FCFA entiers si nécessaire.
         // Cependant, le DTO DashboardStatsDTO utilise probablement BigDecimal pour les calculs précis.
         // Je suppose que totalRevenueFCFA est en centimes dans votre logique.
-        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenueValid);
+        //BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenueValid);
 
         // Nombre total de commandes VALIDÉES (non annulées)
         long totalOrders = validOrders.size();
@@ -91,6 +108,9 @@ public class DashboardService {
                 ((double) totalOrders / totalCarts) * 100 : 0;
 
         // Panier moyen en FCFA (basé sur le revenu des commandes validées)
+        //BigDecimal averageOrderValue = totalOrders > 0 ?
+               // totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
+                //BigDecimal.ZERO;
         BigDecimal averageOrderValue = totalOrders > 0 ?
                 totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
                 BigDecimal.ZERO;

@@ -14,4 +14,16 @@ public class PlaceOrderRequest {
     private Client client;
     private List<OrderItemRequest> orderItems;
 
+    /**
+     * L'ID de la zone sélectionnée (Zone 1, Zone 2, etc.)
+     * Permet au backend de récupérer le prix officiel (2000, 2500, 3000)
+     */
+    private Long deliveryZoneId;
+
+    /**
+     * Le quartier précis saisi ou sélectionné par le client
+     * (ex: "Almadies" ou "Keur Massar")
+     */
+    private String deliveryAddressDetail;
+
 }
