@@ -3,6 +3,8 @@ package com.example.demo.service;
 import com.example.demo.model.DeliveryZone;
 import com.example.demo.repository.DeliveryZoneRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,8 +20,8 @@ public class DeliveryZoneService {
         return repository.save(zone);
     }
 
-    public List<DeliveryZone> getAllZones() {
-        return repository.findAll();
+    public Page<DeliveryZone> getAllZones(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     // Pour l'application Client

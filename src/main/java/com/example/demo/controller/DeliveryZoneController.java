@@ -4,6 +4,8 @@ import com.example.demo.dto.ApiResponse;
 import com.example.demo.model.DeliveryZone;
 import com.example.demo.service.DeliveryZoneService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +26,12 @@ public class DeliveryZoneController {
         return new ApiResponse<>("Zones de livraison récupérées", zones, HttpStatus.OK.value());
     }
     @GetMapping
-    public ApiResponse<List<DeliveryZone>> getAllActiveZones() {
-        List<DeliveryZone> zones = deliveryZoneService.getActiveZones();
-        return new ApiResponse<>("Zones de livraison récupérées", zones, HttpStatus.OK.value());
+    public ApiResponse<Page<DeliveryZone>> getDeliveryZones(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<DeliveryZone> zones = deliveryZoneService.getAllZones(PageRequest.of(page, size));
+        return new ApiResponse<>("Zones récupérées", zones, HttpStatus.OK.value());
     }
 
     // --- POUR LE DASHBOARD (ADMIN) ---
