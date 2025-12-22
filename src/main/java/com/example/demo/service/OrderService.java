@@ -353,6 +353,7 @@ public class OrderService {
             dto.setCategoryName(item.getProduct().getCategory().getName());
         }
 
+
         // Ajouter l'image complète
         if (item.getProduct().getImageUrl() != null) {
             String imageUrl = item.getProduct().getImageUrl().startsWith("http")
@@ -382,6 +383,9 @@ public class OrderService {
         dto.setDeliveryFee(order.getDeliveryFee());
         dto.setDeliveryZone(order.getDeliveryZone());
         dto.setDeliveryAddressDetail(order.getDeliveryAddressDetail());
+        if (order.getChannel() != null) {
+            dto.setChannel(order.getChannel().name()); // .name() convertit l'Enum en String "WEB" ou "WHATSAPP"
+        }
 
         // Mapping des items
         List<OrderItemResponseDTO> itemsDto = order.getItems().stream()
