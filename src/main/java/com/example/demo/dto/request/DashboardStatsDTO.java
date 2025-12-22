@@ -15,4 +15,5 @@ public class DashboardStatsDTO {
     private Double conversionRate;
     private BigDecimal averageOrderValue; // En FCFA directement
     private Map<String, Double> trends;
+    private BigDecimal totalDeliveryRevenue;
 }

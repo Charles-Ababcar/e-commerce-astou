@@ -21,7 +21,7 @@ public class OrderDTO {
     private LocalDateTime updatedAt;
 
     // --- 🚚 NOUVEAUX CHAMPS DE LIVRAISON ---
-    private long deliveryFee;             // Les frais appliqués (ex: 2000)
+    private Long deliveryFee;             // Les frais appliqués (ex: 2000)
     private String deliveryZone;          // Le nom de la zone (ex: "Zone 1")
     private String deliveryAddressDetail;
 

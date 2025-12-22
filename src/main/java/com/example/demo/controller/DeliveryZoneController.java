@@ -18,6 +18,11 @@ public class DeliveryZoneController {
     private final DeliveryZoneService deliveryZoneService;
 
     // --- POUR LE CLIENT ET LE DASHBOARD ---
+    @GetMapping("/client")
+    public ApiResponse<List<DeliveryZone>> getAllActiveZonesClient() {
+        List<DeliveryZone> zones = deliveryZoneService.getActiveZones();
+        return new ApiResponse<>("Zones de livraison récupérées", zones, HttpStatus.OK.value());
+    }
     @GetMapping
     public ApiResponse<List<DeliveryZone>> getAllActiveZones() {
         List<DeliveryZone> zones = deliveryZoneService.getActiveZones();

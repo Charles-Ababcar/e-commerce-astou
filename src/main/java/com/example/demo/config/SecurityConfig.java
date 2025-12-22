@@ -60,7 +60,8 @@ public class SecurityConfig {
                                 "/api/products/shop/{shopId}",
                                 "/api/categories/all",
                                 "/api/orders/{id}",
-                                "/api/orders/get/{id}"
+                                "/api/orders/get/{id}",
+                                "/api/delivery-zones/client"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

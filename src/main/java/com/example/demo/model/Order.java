@@ -33,7 +33,7 @@ public class Order {
     // --- 🚚 NOUVEAUX CHAMPS POUR LA LIVRAISON ---
 
     @Column(name = "delivery_fee")
-    private long deliveryFee; // Stocke le prix de la zone au moment de l'achat
+    private Long deliveryFee; // Stocke le prix de la zone au moment de l'achat
 
     @Column(name = "delivery_zone")
     private String deliveryZone; // Nom de la zone (ex: "Zone 1")

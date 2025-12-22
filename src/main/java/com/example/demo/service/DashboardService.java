@@ -41,90 +41,64 @@ public class DashboardService {
     public ApiResponse<DashboardStatsDTO> getGeneralStatistics(LocalDate startDate, LocalDate endDate) {
 
         // 1. Récupération de TOUTES les commandes dans la période
-        // NOTE: getOrders est supposé être une méthode qui renvoie un Page<Order>
-        // Assurez-vous que cette méthode est disponible, si elle n'existe pas encore:
-
         List<Order> allOrders = getOrders(startDate, endDate, Pageable.unpaged()).getContent();
 
-        // 2. DÉFINITION du statut d'annulation et FILTRAGE CRITIQUE
-        // 🚨 CORRECTION : Utilisation directe de la valeur de l'Enum (plus sûr que String)
+        // 2. FILTRAGE : Exclure uniquement les commandes annulées
         final OrderStatus CANCELED_STATUS = OrderStatus.CANCELLED;
-
         List<Order> validOrders = allOrders.stream()
-                // 🚨 CORRECTION DE LA LIGNE 54 : Utilisation de la comparaison d'Enum (==)
                 .filter(order -> order.getStatus() != CANCELED_STATUS)
                 .toList();
 
-        // --- CALCUL DES STATISTIQUES BASÉES SUR validOrders ---
+        // --- CALCUL DES STATISTIQUES FINANCIÈRES ---
 
-        // 1. Calcul du Revenu TOTAL (Produits + Livraisons)
+        // 3. Calcul du Revenu TOTAL brut (Produits + Livraisons)
         long totalRevenueWithDelivery = validOrders.stream()
                 .mapToLong(Order::getTotalCents)
                 .sum();
 
-// 2. Calcul des FRAIS DE LIVRAISON totaux perçus
+        // 4. Calcul des FRAIS DE LIVRAISON (Sécurisé contre les valeurs NULL)
+        // On gère le cas des anciennes commandes où deliveryFee est null
         long totalDeliveryFees = validOrders.stream()
-                .mapToLong(Order::getDeliveryFee) // Nouveau champ ajouté à l'entité
+                .mapToLong(order -> order.getDeliveryFee() != null ? order.getDeliveryFee() : 0L)
                 .sum();
 
-// 3. Calcul du REVENU NET (Produits uniquement)
-// C'est ce montant qui représente votre véritable performance commerciale
-        long netRevenueProducts = totalRevenueWithDelivery - totalDeliveryFees;
+        // 5. Calcul du REVENU NET (Vente de produits uniquement)
+        // C'est ce montant qui représente votre performance réelle
+        long netProductRevenue = totalRevenueWithDelivery - totalDeliveryFees;
 
-        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(netRevenueProducts);
+        BigDecimal totalRevenueFCFA = BigDecimal.valueOf(netProductRevenue);
         BigDecimal deliveryTotalFCFA = BigDecimal.valueOf(totalDeliveryFees);
 
-        // Calcul du Chiffre d'Affaires Total (en centimes) - Basé uniquement sur les commandes valides
-        long totalRevenueValid = validOrders.stream()
-                .mapToLong(Order::getTotalCents)
-                .sum();
+        // --- STATISTIQUES DE VOLUMÉTRIE ---
 
-        // Conversion en FCFA (si l'unité est en centimes, ici on utilise un long pour la somme)
-        // NOTE: Si totalRevenueValid est en centimes, il faut le diviser par 100 pour obtenir des FCFA entiers si nécessaire.
-        // Cependant, le DTO DashboardStatsDTO utilise probablement BigDecimal pour les calculs précis.
-        // Je suppose que totalRevenueFCFA est en centimes dans votre logique.
-        //BigDecimal totalRevenueFCFA = BigDecimal.valueOf(totalRevenueValid);
-
-        // Nombre total de commandes VALIDÉES (non annulées)
         long totalOrders = validOrders.size();
-
-        // --- Statistiques indépendantes de la validité de la commande ---
-
-        // Nombre total de clients
         long totalCustomers = clientRepository.count();
-
-        // Nombre total de produits actifs
         long totalProducts = productRepository.count();
 
-        // Clients enregistrés des 30 derniers jours
+        // Clients des 30 derniers jours
         LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
-        long newCustomers = clientRepository.countByCreatedAtAfter(
-                thirtyDaysAgo.atStartOfDay()
-        );
+        long newCustomers = clientRepository.countByCreatedAtAfter(thirtyDaysAgo.atStartOfDay());
 
-        // Taux de conversion (basé sur les commandes validées / total des paniers)
+        // Taux de conversion
         long totalCarts = cartRepository.count();
-        double conversionRate = totalCarts > 0 ?
-                ((double) totalOrders / totalCarts) * 100 : 0;
+        double conversionRate = totalCarts > 0 ? ((double) totalOrders / totalCarts) * 100 : 0;
 
-        // Panier moyen en FCFA (basé sur le revenu des commandes validées)
-        //BigDecimal averageOrderValue = totalOrders > 0 ?
-               // totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
-                //BigDecimal.ZERO;
+        // Panier moyen (calculé sur le revenu des PRODUITS uniquement pour plus de précision)
         BigDecimal averageOrderValue = totalOrders > 0 ?
                 totalRevenueFCFA.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP) :
                 BigDecimal.ZERO;
 
-        // Tendances (simulées pour l'exemple)
+        // --- TENDANCES (Simulées) ---
         Map<String, Double> trends = new HashMap<>();
         trends.put("revenueGrowth", 12.5);
         trends.put("orderGrowth", 8.2);
         trends.put("customerGrowth", 15.3);
         trends.put("conversionGrowth", 4.7);
 
-        // Construction du DTO
+        // --- CONSTRUCTION DU DTO ---
         DashboardStatsDTO stats = new DashboardStatsDTO();
-        stats.setTotalRevenue(totalRevenueFCFA);
+        stats.setTotalRevenue(totalRevenueFCFA); // Revenu produits
+        stats.setTotalDeliveryRevenue(deliveryTotalFCFA); // NOUVEAU : Total livraisons perçues
         stats.setTotalOrders(totalOrders);
         stats.setTotalCustomers(totalCustomers);
         stats.setTotalProducts(totalProducts);
@@ -133,7 +107,7 @@ public class DashboardService {
         stats.setAverageOrderValue(averageOrderValue);
         stats.setTrends(trends);
 
-        return new ApiResponse<>("Statistiques générales", stats, HttpStatus.OK.value());
+        return new ApiResponse<>("Statistiques générales récupérées avec succès", stats, HttpStatus.OK.value());
     }
     public ApiResponse<List<SalesTrendDTO>> getSalesTrends(String type, LocalDate startDate, LocalDate endDate) {
         List<SalesTrendDTO> trends = new ArrayList<>();
