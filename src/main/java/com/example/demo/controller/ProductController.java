@@ -10,12 +10,16 @@ import com.example.demo.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -107,5 +111,22 @@ public class ProductController {
 
         // Utilise PageResponse pour encapsuler la page et ses métadonnées
         return ResponseEntity.ok(new PageResponse<>(productsPage));
+    }
+    @GetMapping("/category/client/{categoryId}")
+    public ApiResponse<Page<ProductResponseDTO>> getProductsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        // Tri par défaut : les plus récents en premier
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<ProductResponseDTO> products = productService.getProductsByCategoryPaginated(categoryId, pageable);
+
+        return new ApiResponse<>(
+                "Produits de la catégorie récupérés avec succès",
+                products,
+                HttpStatus.OK.value()
+        );
     }
 }

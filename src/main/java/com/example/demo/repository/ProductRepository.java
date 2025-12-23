@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
@@ -61,5 +62,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                  Pageable pageable);
 
     Page<Product> findByShopId(Long shopId, Pageable pageable);
+
+
+    Page<Product> findByCategoryId(Long categoryId,Pageable pageable);
 
 }

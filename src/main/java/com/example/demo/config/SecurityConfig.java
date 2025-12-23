@@ -61,7 +61,8 @@ public class SecurityConfig {
                                 "/api/categories/all",
                                 "/api/orders/{id}",
                                 "/api/orders/get/{id}",
-                                "/api/delivery-zones/client"
+                                "/api/delivery-zones/client",
+                                "/api/products/category/client/{categoryId}"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

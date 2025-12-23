@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.ApiResponse;
 import com.example.demo.dto.ShopResponseDTO;
 import com.example.demo.dto.request.CategoryResponseDTO;
+import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.dto.request.ProductRequestDTO;
 import com.example.demo.dto.request.ProductResponseDTO;
 import com.example.demo.model.Category;
@@ -23,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -201,7 +204,13 @@ public class ProductService {
     }
 
 
-    // Dans ProductService (ou un utilitaire de conversion)
+    public Page<ProductResponseDTO> getProductsByCategoryPaginated(Long categoryId, Pageable pageable) {
+        // 1. Récupérer la page de produits depuis la base de données
+        Page<Product> productsPage = productRepository.findByCategoryId(categoryId, pageable);
+
+        // 2. Transformer chaque produit en ProductResponseDTO via votre méthode convertToDto
+        return productsPage.map(this::convertToDto);
+    }
 
     private ShopResponseDTO convertToShopDto(Shop shop) {
         // Créez ici la logique pour convertir l'entité Shop en ShopResponseDTO
