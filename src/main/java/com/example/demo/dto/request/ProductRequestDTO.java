@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Setter
 @Getter
 public class ProductRequestDTO {
@@ -29,5 +31,8 @@ public class ProductRequestDTO {
     private Long categoryId;
 
     private Boolean isActive;
+
+    private List<Long> colorIds; // Optionnel
+    private List<Long> sizeIds;  // Optionnel
 
 }

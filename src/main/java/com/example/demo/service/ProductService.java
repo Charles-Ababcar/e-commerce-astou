@@ -6,12 +6,8 @@ import com.example.demo.dto.request.CategoryResponseDTO;
 import com.example.demo.dto.request.ProductDTO;
 import com.example.demo.dto.request.ProductRequestDTO;
 import com.example.demo.dto.request.ProductResponseDTO;
-import com.example.demo.model.Category;
-import com.example.demo.model.Product;
-import com.example.demo.model.Shop;
-import com.example.demo.repository.CategoryRepository;
-import com.example.demo.repository.ProductRepository;
-import com.example.demo.repository.ShopRepository;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -36,6 +32,8 @@ public class ProductService {
     private final ShopRepository shopRepository;
     private final CategoryRepository categoryRepository;
     private final ImageUploadService imageUploadService;
+    private final SizeRepository sizeRepository;
+    private final ColorRepository colorRepository;
 
     public Page<ProductResponseDTO> getAllProducts(Long shopId, String search, Pageable pageable) {
 
@@ -79,6 +77,18 @@ public class ProductService {
 
             // 👉 isActive = true par défaut
             product.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
+
+            // --- GESTION DES COULEURS (Optionnel) ---
+            if (dto.getColorIds() != null && !dto.getColorIds().isEmpty()) {
+                List<Color> colors = colorRepository.findAllById(dto.getColorIds());
+                product.setAvailableColors(colors);
+            }
+
+            // --- GESTION DES TAILLES (Optionnel) ---
+            if (dto.getSizeIds() != null && !dto.getSizeIds().isEmpty()) {
+                List<Size> sizes = sizeRepository.findAllById(dto.getSizeIds());
+                product.setAvailableSizes(sizes);
+            }
 
             // Gestion optionnelle des relations
             if (dto.getShopId() != null) {
@@ -154,10 +164,23 @@ public class ProductService {
                     product.setPriceCents(dto.getPriceCents());
                     product.setStock(dto.getStock());
 
-                    if (dto.getShopId() != null) {
-                        Shop shop = shopRepository.findById(dto.getShopId())
-                                .orElseThrow(() -> new RuntimeException("Shop introuvable"));
-                        product.setShop(shop);
+                    // --- GESTION DES COULEURS (Optionnel) ---
+                    if (dto.getColorIds() != null && !dto.getColorIds().isEmpty()) {
+                        List<Color> colors = colorRepository.findAllById(dto.getColorIds());
+                        product.setAvailableColors(colors);
+                    }
+
+                    // --- GESTION DES COULEURS ---
+                    // Si l'ID est présent, on met à jour. Si la liste est vide ou nulle, on vide les couleurs.
+                    if (dto.getColorIds() != null) {
+                        List<Color> colors = colorRepository.findAllById(dto.getColorIds());
+                        product.setAvailableColors(colors);
+                    }
+
+                    // --- GESTION DES TAILLES ---
+                    if (dto.getSizeIds() != null) {
+                        List<Size> sizes = sizeRepository.findAllById(dto.getSizeIds());
+                        product.setAvailableSizes(sizes);
                     }
 
                     if (dto.getCategoryId() != null) {
@@ -192,23 +215,16 @@ public class ProductService {
 
     public Page<ProductResponseDTO> getProductsByShopId(Long shopId, Pageable pageable) {
 
-        // 1. Récupère la page d'entités Product en utilisant l'ID de la boutique
         Page<Product> productsPage = productRepository.findByShopId(shopId, pageable);
 
-        // 2. Mappe la Page<Product> en Page<ProductResponseDTO>
         return productsPage.map(this::convertToDto);
 
-        // Note: Si le shopId est invalide, cette méthode retournera une page vide (ce qui est acceptable).
-        // Si vous voulez retourner un 404 explicite si la boutique n'existe pas, vous devez
-        // injecter et vérifier ShopRepository ici.
     }
 
 
     public Page<ProductResponseDTO> getProductsByCategoryPaginated(Long categoryId, Pageable pageable) {
-        // 1. Récupérer la page de produits depuis la base de données
         Page<Product> productsPage = productRepository.findByCategoryId(categoryId, pageable);
 
-        // 2. Transformer chaque produit en ProductResponseDTO via votre méthode convertToDto
         return productsPage.map(this::convertToDto);
     }
 
@@ -254,6 +270,20 @@ public class ProductService {
                     .path(p.getImageUrl())
                     .toUriString();
             dto.setImageUrl(imageUrl);
+        }
+
+        // --- NOUVEAU : Couleurs et Tailles ---
+        // On vérifie si les listes ne sont pas nulles avant de mapper les noms
+        if (p.getAvailableColors() != null) {
+            dto.setAvailableColors(p.getAvailableColors().stream()
+                    .map(Color::getName) // Récupère juste le nom (ex: "Rouge")
+                    .toList());
+        }
+
+        if (p.getAvailableSizes() != null) {
+            dto.setAvailableSizes(p.getAvailableSizes().stream()
+                    .map(Size::getName) // Récupère juste le nom (ex: "XL")
+                    .toList());
         }
 
         // Shop : Conversion et affectation du DTO imbriqué

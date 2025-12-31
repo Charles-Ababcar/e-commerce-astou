@@ -51,6 +51,23 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+// Dans Product.java
+
+    @ManyToMany
+    @JoinTable(
+            name = "product_size_mapping",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "size_id")
+    )
+    private List<Size> availableSizes;
+
+    @ManyToMany
+    @JoinTable(
+            name = "product_color_mapping",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "color_id")
+    )
+    private List<Color> availableColors;
 
     @PrePersist
     protected void onCreate() {
