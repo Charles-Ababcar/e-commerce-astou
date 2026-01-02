@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none   # ne touche pas aux tables
+      ddl-auto: update   # ⚡ Crée ou met à jour les tables si nécessaire
     show-sql: false
 
   servlet:
