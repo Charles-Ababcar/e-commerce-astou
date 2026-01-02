@@ -102,7 +102,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
-                "http://77.37.125.11:*"
+                "http://77.37.125.11:*",
+                "https://minanegb.com",
+                "https://dashboard.minanegb.com",
+                "https://test.minanegb.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
