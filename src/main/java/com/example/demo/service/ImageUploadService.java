@@ -16,65 +16,43 @@ public class ImageUploadService {
 
     private final Path root;
 
-    // On peut définir le dossier dans application.properties ou y mettre un chemin par défaut
     public ImageUploadService(@Value("${app.upload.dir:uploads}") String uploadDir) {
-        // Si chemin relatif, on le transforme en absolu selon le OS
         if (!Paths.get(uploadDir).isAbsolute()) {
             this.root = Paths.get(System.getProperty("user.home")).resolve(uploadDir.trim());
         } else {
             this.root = Paths.get(uploadDir.trim());
         }
 
-
         try {
             if (!Files.exists(root)) {
                 Files.createDirectories(root);
-                System.out.println("Dossier créé : " + root.toAbsolutePath());
             }
         } catch (IOException e) {
-            throw new RuntimeException("Impossible d'initialiser le dossier pour le téléchargement!", e);
+            throw new RuntimeException("Erreur initialisation dossier uploads", e);
         }
     }
 
     public String uploadImage(MultipartFile file, String namePrefix) {
         try {
             String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
+            String extension = getExtension(originalFilename);
             String filename = namePrefix + "_" + UUID.randomUUID() + extension;
 
             Path targetLocation = this.root.resolve(filename);
             Files.copy(file.getInputStream(), targetLocation);
 
-            // 🔥 Retourne l’URL complète pour stockage dans la DB
-            String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/uploads/")
-                    .path(filename)
-                    .toUriString();
-
-            return fileUrl;
+            // 🔥 ON RETOURNE JUSTE LE NOM DU FICHIER
+            // C'est le Service (Product/Shop) qui construira l'URL avec le bon domaine
+            return filename;
 
         } catch (IOException e) {
-            throw new RuntimeException("Impossible de stocker le fichier. Erreur : " + e.getMessage(), e);
+            throw new RuntimeException("Erreur stockage fichier: " + e.getMessage());
         }
     }
 
-
-    public Path getImagePath(String filename) {
-        return root.resolve(filename);
-    }
-
-    public String getRootPath() {
-        return root.toAbsolutePath().toString();
-    }
-
-
-    // récupère l'extension du fichier
     private String getExtension(String originalName) {
+        if (originalName == null) return "";
         int index = originalName.lastIndexOf('.');
         return index != -1 ? originalName.substring(index) : "";
     }
 }
-

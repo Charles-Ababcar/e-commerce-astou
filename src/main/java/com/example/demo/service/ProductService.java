@@ -10,6 +10,7 @@ import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +36,9 @@ public class ProductService {
     private final SizeRepository sizeRepository;
     private final ColorRepository colorRepository;
 
+
+    @Value("${app.api-url:https://api.minanegb.com}")
+    private String apiUrl;
     public Page<ProductResponseDTO> getAllProducts(Long shopId, String search, Pageable pageable) {
 
         // Ajouter tri DESC par createdAt au pageable
@@ -261,15 +265,17 @@ public class ProductService {
         dto.setCreatedAt(p.getCreatedAt());
         dto.setUpdatedAt(p.getUpdatedAt());
 
+        // LOGIQUE URL IMAGE CORRIGÉE
         if (p.getImageUrl() != null) {
-            // URL complète de l'image
-            String imageUrl = p.getImageUrl().startsWith("http")
-                    ? p.getImageUrl()
-                    : ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/uploads/")
-                    .path(p.getImageUrl())
-                    .toUriString();
-            dto.setImageUrl(imageUrl);
+            String imageUrl = p.getImageUrl();
+            // Si c'est juste un nom de fichier, on ajoute le domaine
+            if (!imageUrl.startsWith("http")) {
+                dto.setImageUrl(apiUrl + "/uploads/" + imageUrl);
+            } else {
+                // Si c'est une ancienne URL avec IP, on la nettoie
+                dto.setImageUrl(imageUrl.replace("http://77.37.125.11:8080", apiUrl)
+                        .replace("http://", "https://"));
+            }
         }
 
         // --- NOUVEAU : Couleurs et Tailles ---

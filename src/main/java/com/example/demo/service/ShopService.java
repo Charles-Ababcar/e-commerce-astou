@@ -7,6 +7,7 @@ import com.example.demo.model.Shop;
 import com.example.demo.repository.ShopRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,8 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final ImageUploadService imageUploadService;
+    @Value("${app.api-url:https://api.minanegb.com}")
+    private String apiUrl;
 
     public ApiResponse<ShopResponseDTO> createShop(ShopRequestDTO dto, MultipartFile image) {
 
@@ -152,19 +155,13 @@ public class ShopService {
         dto.setEmail(shop.getEmail());
         dto.setCreatedAt(shop.getCreatedAt());
 
-        // Génération du lien complet vers l'image
         if (shop.getImageUrl() != null) {
-
-            // Si l'URL commence déjà par http, on ne la modifie pas
-            if (shop.getImageUrl().startsWith("http")) {
-                dto.setImageUrl(shop.getImageUrl());
+            String img = shop.getImageUrl();
+            if (!img.startsWith("http")) {
+                dto.setImageUrl(apiUrl + "/uploads/" + img);
             } else {
-                // On génère l'URL complète
-                String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                        .path("/uploads/")
-                        .path(shop.getImageUrl())
-                        .toUriString();
-                dto.setImageUrl(fileDownloadUri);
+                dto.setImageUrl(img.replace("http://77.37.125.11:8080", apiUrl)
+                        .replace("http://", "https://"));
             }
         }
 
