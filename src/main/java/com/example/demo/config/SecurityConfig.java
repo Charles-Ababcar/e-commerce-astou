@@ -105,7 +105,8 @@ public class SecurityConfig {
                 "http://77.37.125.11:*",
                 "https://minanegb.com",
                 "https://dashboard.minanegb.com",
-                "https://test.minanegb.com"
+                "https://test.minanegb.com",
+                "https://dashboard-test.minanegb.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
